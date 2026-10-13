@@ -1,5 +1,7 @@
 package com.example.alarmacomunitariazaror.model
 
+import android.net.Uri
+
 // ---------- REGISTRO ----------
 // Un mensaje de error (o null) por cada campo del formulario
 data class RegistroErrores(
@@ -36,4 +38,19 @@ data class LoginUiState(
     val errorGeneral: String? = null,     // "Correo o contraseña incorrectos"
     val cargando: Boolean = false,
     val sesionIniciada: Boolean = false
+)
+
+// ---------- PANEL DE ALARMA (formulario de nueva alerta) ----------
+data class AlertaErrores(val tipo: String? = null, val descripcion: String? = null) {
+    fun hayErrores(): Boolean = tipo != null || descripcion != null
+}
+
+data class PanelUiState(
+    val tipo: TipoEmergencia? = null,
+    val descripcion: String = "",
+    val errores: AlertaErrores = AlertaErrores(),
+    val ubicacion: String = "Ubicación no disponible",
+    val fotoUri: Uri? = null,             // foto opcional tomada con la cámara
+    val alarmaActiva: Boolean = false,    // true mientras suena la alarma
+    val mensajeExito: Boolean = false     // muestra el aviso animado "Alerta enviada"
 )

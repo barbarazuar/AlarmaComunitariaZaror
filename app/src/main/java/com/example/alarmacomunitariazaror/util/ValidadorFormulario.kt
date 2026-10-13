@@ -1,5 +1,7 @@
 package com.example.alarmacomunitariazaror.util
 
+import com.example.alarmacomunitariazaror.model.TipoEmergencia
+
 // object = una sola instancia, sin necesidad de crear objetos. Cada función devuelve:
 //   - null          -> el valor es válido
 //   - un String     -> el mensaje de error que verá el usuario
@@ -38,6 +40,17 @@ object ValidadorFormulario {
     fun direccion(valor: String): String? = when {
         valor.isBlank() -> "La dirección es obligatoria"
         valor.trim().length < 5 -> "Escribe calle y número (ej: Los Jazmines 425)"
+        else -> null
+    }
+
+    // El tipo es obligatorio: viene como null mientras el usuario no elija nada
+    fun tipoEmergencia(tipo: TipoEmergencia?): String? =
+        if (tipo == null) "Selecciona el tipo de emergencia" else null
+
+    fun descripcion(valor: String): String? = when {
+        valor.isBlank() -> "Describe brevemente lo que ocurre"
+        valor.trim().length < 5 -> "Escribe al menos 5 caracteres"
+        valor.length > 140 -> "Máximo 140 caracteres (llevas ${valor.length})"
         else -> null
     }
 }
