@@ -2,10 +2,15 @@ package com.example.alarmacomunitariazaror.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Paleta propia de Alarma Comunitaria: azul oscuro (confianza) y rojo (emergencia)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Tema claro
+val AzulPrimario = Color(0xFF1A3A6B)
+val AzulSecundario = Color(0xFF4A6FA5)
+val RojoAlerta = Color(0xFFD32F2F)
+val FondoClaro = Color(0xFFF7F9FC)
+
+// Tema oscuro (tonos mas claros para que se lean sobre fondo negro)
+val AzulPrimarioOscuro = Color(0xFFA9C7FF)
+val AzulSecundarioOscuro = Color(0xFFBCC7DC)
+val RojoAlertaOscuro = Color(0xFFFFB4AB)
