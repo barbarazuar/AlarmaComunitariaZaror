@@ -52,7 +52,6 @@ fun PanelRoute(
     val usuario by authViewModel.usuario.collectAsState()
     val notificador = remember(context) { Notificador(context.applicationContext) }
     val gestorUbicacion = remember(context) { GestorUbicacion(context.applicationContext) }
-
     var mostrarConfirmacion by remember { mutableStateOf(false) }
     var fotoPendiente by remember { mutableStateOf<android.net.Uri?>(null) }
 
@@ -128,13 +127,12 @@ fun PanelRoute(
                 TextButton(
                     onClick = {
                         mostrarConfirmacion = false
-                        alarmaViewModel.activarAlarma(
+                        val guardada = alarmaViewModel.activarAlarma(
                             vecinoNombre = usuario?.nombre ?: "Vecino demo"
-                        ) { guardada ->
-                            if (guardada) {
-                                GestorSonido.iniciar(context)
-                                notificarSiCorresponde()
-                            }
+                        )
+                        if (guardada) {
+                            GestorSonido.iniciar(context)
+                            notificarSiCorresponde()
                         }
                     }
                 ) { Text("Confirmar") }
@@ -200,4 +198,3 @@ fun PanelRoute(
         }
     }
 }
-
