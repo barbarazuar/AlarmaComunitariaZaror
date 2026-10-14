@@ -51,6 +51,8 @@ data class PanelUiState(
     val errores: AlertaErrores = AlertaErrores(),
     val ubicacion: String = "Ubicación no disponible",
     val fotoUri: Uri? = null,             // foto opcional tomada con la cámara
+    val guardando: Boolean = false,
     val alarmaActiva: Boolean = false,    // true mientras suena la alarma
-    val mensajeExito: Boolean = false     // muestra el aviso animado "Alerta enviada"
+    val mensajeExito: Boolean = false,
+    val mensajeError: String? = null
 )

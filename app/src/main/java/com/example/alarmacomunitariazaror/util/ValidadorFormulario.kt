@@ -48,9 +48,8 @@ object ValidadorFormulario {
         if (tipo == null) "Selecciona el tipo de emergencia" else null
 
     fun descripcion(valor: String): String? = when {
-        valor.isBlank() -> "Describe brevemente lo que ocurre"
-        valor.trim().length < 5 -> "Escribe al menos 5 caracteres"
-        valor.length > 140 -> "Máximo 140 caracteres (llevas ${valor.length})"
+        valor.isNotBlank() && valor.trim().length < 5 -> "Escribe al menos 5 caracteres"
+        valor.length > 280 -> "Máximo 280 caracteres (llevas ${valor.length})"
         else -> null
     }
 }

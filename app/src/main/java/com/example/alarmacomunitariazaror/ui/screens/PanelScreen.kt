@@ -96,9 +96,17 @@ fun PanelScreen(
                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("¡Alerta enviada a los vecinos del sector!", color = Color.White)
+                    Text("Guardada solo en este dispositivo", color = Color.White)
                 }
             }
+        }
+
+        AnimatedVisibility(visible = panel.mensajeError != null) {
+            Text(
+                text = panel.mensajeError.orEmpty(),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
 
         // --- Formulario de la alerta (con validación por campo) ---
@@ -147,12 +155,17 @@ fun PanelScreen(
             // Si la alarma suena, el botón la detiene; si no, intenta activarla
             onClick = if (panel.alarmaActiva) onDesactivar else onActivar,
             colors = ButtonDefaults.buttonColors(containerColor = colorBoton, contentColor = Color.White),
+            enabled = !panel.guardando,
             shape = CircleShape,
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.size(200.dp).scale(escala)   // scale aplica el pulso
         ) {
             Text(
-                text = if (panel.alarmaActiva) "DETENER\nALARMA" else "ACTIVAR\nALARMA",
+                text = when {
+                    panel.guardando -> "GUARDANDO…"
+                    panel.alarmaActiva -> "DETENER\nALARMA"
+                    else -> "ACTIVAR\nALARMA"
+                },
                 textAlign = TextAlign.Center,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
@@ -161,6 +174,11 @@ fun PanelScreen(
         Text(
             text = if (panel.alarmaActiva) "La alarma está sonando…" else "Completa los datos y pulsa el botón",
             style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "Demostración académica: no reemplaza servicios formales de emergencia.",
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center
         )
     }
 }
