@@ -36,19 +36,26 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
     val panel: StateFlow<PanelUiState> = _panel.asStateFlow()
 
     fun onTipoChange(tipo: TipoEmergencia) =
-        _panel.update { it.copy(tipo = tipo, errores = it.errores.copy(tipo = null)) }
+        _panel.update {
+            it.copy(tipo = tipo, errores = it.errores.copy(tipo = null), mensajeError = null)
+        }
 
     fun onDescripcionChange(texto: String) =
-        _panel.update { it.copy(descripcion = texto, errores = it.errores.copy(descripcion = null)) }
+        _panel.update {
+            it.copy(descripcion = texto, errores = it.errores.copy(descripcion = null), mensajeError = null)
+        }
 
     // Los recursos nativos (módulo 4 bis) entregan sus resultados con estas funciones
     fun onUbicacionObtenida(texto: String) = _panel.update { it.copy(ubicacion = texto) }
     fun onFotoCapturada(uri: Uri?) = _panel.update { it.copy(fotoUri = uri) }
 
-    // Devuelve true si la alerta era válida y se guardó. La pantalla usa ese resultado
-    // para decidir si debe sonar la alarma y mostrar la notificación.
-    fun activarAlarma(vecinoNombre: String): Boolean {
+    // El resultado se informa después de que Room termina la inserción.
+    fun activarAlarma(vecinoNombre: String, onResultado: (Boolean) -> Unit) {
         val s = _panel.value
+        if (s.guardando || s.alarmaActiva) {
+            onResultado(false)
+            return
+        }
         val errores = AlertaErrores(
             tipo = ValidadorFormulario.tipoEmergencia(s.tipo),
             descripcion = ValidadorFormulario.descripcion(s.descripcion)
@@ -56,7 +63,8 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
         val tipo = s.tipo
         if (errores.hayErrores() || tipo == null) {
             _panel.update { it.copy(errores = errores) } // muestra los errores en pantalla
-            return false
+            onResultado(false)
+            return
         }
         val alerta = Alerta(
             vecinoNombre = vecinoNombre,
@@ -66,14 +74,32 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
             descripcion = s.descripcion.trim(),
             fotoUri = s.fotoUri?.toString()
         )
-        viewModelScope.launch { repo.guardarAlerta(alerta) }   // guarda en Room
-        _panel.update { it.copy(alarmaActiva = true, mensajeExito = true, errores = errores) }
-        // Oculta el aviso verde a los 3 segundos
+        _panel.update { it.copy(guardando = true, mensajeError = null) }
         viewModelScope.launch {
-            delay(3_000)
-            _panel.update { it.copy(mensajeExito = false) }
+            runCatching { repo.guardarAlerta(alerta) }
+                .onSuccess {
+                    _panel.update {
+                        it.copy(
+                            guardando = false,
+                            alarmaActiva = true,
+                            mensajeExito = true,
+                            errores = errores
+                        )
+                    }
+                    onResultado(true)
+                    delay(3_000)
+                    _panel.update { it.copy(mensajeExito = false) }
+                }
+                .onFailure {
+                    _panel.update {
+                        it.copy(
+                            guardando = false,
+                            mensajeError = "No se pudo guardar la alerta en este dispositivo"
+                        )
+                    }
+                    onResultado(false)
+                }
         }
-        return true
     }
 
     // Detiene la alarma y limpia el formulario (conserva la última ubicación)

@@ -128,12 +128,13 @@ fun PanelRoute(
                 TextButton(
                     onClick = {
                         mostrarConfirmacion = false
-                        val guardada = alarmaViewModel.activarAlarma(
+                        alarmaViewModel.activarAlarma(
                             vecinoNombre = usuario?.nombre ?: "Vecino demo"
-                        )
-                        if (guardada) {
-                            GestorSonido.iniciar(context)
-                            notificarSiCorresponde()
+                        ) { guardada ->
+                            if (guardada) {
+                                GestorSonido.iniciar(context)
+                                notificarSiCorresponde()
+                            }
                         }
                     }
                 ) { Text("Confirmar") }
