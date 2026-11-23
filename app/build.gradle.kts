@@ -1,5 +1,6 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import java.util.Properties
 
 plugins {
     jacoco
@@ -9,6 +10,29 @@ plugins {
 }
 
 jacoco { toolVersion = "0.8.14" }
+
+val backendHost = providers.gradleProperty("backendHost").orElse("10.0.2.2").get()
+require(backendHost.matches(Regex("[A-Za-z0-9.-]+"))) { "backendHost debe ser una IP o nombre de host, sin protocolo ni puerto" }
+
+// El archivo privado nunca se incorpora al repositorio ni a la APK.
+val firma = Properties().apply {
+    val archivo = rootProject.file(".private/signing.properties")
+    if (archivo.isFile) archivo.inputStream().use { load(it) }
+}
+fun propiedadFirma(nombre: String, variable: String): String? =
+    providers.environmentVariable(variable).orNull?.takeIf { it.isNotBlank() }
+        ?: firma.getProperty(nombre)?.takeIf { it.isNotBlank() }
+
+val archivoLlave = propiedadFirma("storeFile", "ZAROR_STORE_FILE")?.let { rootProject.file(it) }
+val claveAlmacen = propiedadFirma("storePassword", "ZAROR_STORE_PASSWORD")
+val aliasLlave = propiedadFirma("keyAlias", "ZAROR_KEY_ALIAS")
+val claveLlave = propiedadFirma("keyPassword", "ZAROR_KEY_PASSWORD")
+val firmaCompleta = archivoLlave?.isFile == true && claveAlmacen != null && aliasLlave != null && claveLlave != null
+val validarFirmaRelease = tasks.register("validarFirmaRelease") {
+    group = "verification"
+    doLast { check(firmaCompleta) { "Falta firma release. Ejecuta scripts/Nueva-Llave.ps1 o configura ZAROR_STORE_FILE, ZAROR_STORE_PASSWORD, ZAROR_KEY_ALIAS y ZAROR_KEY_PASSWORD." } }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(validarFirmaRelease) }
 
 // Lógica sin UI Compose, DTO, Room generado ni fábricas Android.
 val clasesLogica = fileTree(layout.buildDirectory.dir(
@@ -65,12 +89,27 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "BACKEND_HOST", "\"$backendHost\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (firmaCompleta) {
+            create("entrega") {
+                storeFile = archivoLlave
+                storePassword = claveAlmacen
+                keyAlias = aliasLlave
+                keyPassword = claveLlave
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
+    }
     buildTypes {
         release {
+            isDebuggable = false
+            if (firmaCompleta) signingConfig = signingConfigs.getByName("entrega")
             optimization {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
@@ -83,6 +122,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
