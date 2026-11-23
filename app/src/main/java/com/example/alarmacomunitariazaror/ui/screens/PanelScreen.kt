@@ -24,14 +24,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.alarmacomunitariazaror.model.ClimaUiState
 import com.example.alarmacomunitariazaror.model.PanelUiState
 import com.example.alarmacomunitariazaror.model.TipoEmergencia
 import com.example.alarmacomunitariazaror.ui.components.CampoValidado
+import com.example.alarmacomunitariazaror.ui.components.ClimaCard
 import com.example.alarmacomunitariazaror.ui.components.SelectorTipoEmergencia
 
 @Composable
 fun PanelScreen(
     panel: PanelUiState,                          // todo lo que la pantalla muestra
+    clima: ClimaUiState,                          // dato de la API externa (clima del sector)
     nombreVecino: String,                         // datos del vecino con sesión iniciada
     onTipoChange: (TipoEmergencia) -> Unit,
     onDescripcionChange: (String) -> Unit,
@@ -83,6 +86,8 @@ fun PanelScreen(
             }
         }
 
+        ClimaCard(clima)
+
         // --- ANIMACIÓN 3: aviso verde que aparece y desaparece ---
         AnimatedVisibility(
             visible = panel.mensajeExito,
@@ -96,7 +101,11 @@ fun PanelScreen(
                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("Guardada solo en este dispositivo", color = Color.White)
+                    Text(
+                        if (panel.enviadaAlServidor) "Alerta enviada al servidor"
+                        else "Guardada en este dispositivo (se enviará cuando haya conexión)",
+                        color = Color.White
+                    )
                 }
             }
         }
