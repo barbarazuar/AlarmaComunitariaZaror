@@ -1,7 +1,56 @@
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+
 plugins {
+    jacoco
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") // activa KSP en este modulo
+}
+
+jacoco { toolVersion = "0.8.14" }
+
+// Lógica sin UI Compose, DTO, Room generado ni fábricas Android.
+val clasesLogica = fileTree(layout.buildDirectory.dir(
+    "intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes"
+)) {
+    include("**/viewmodel/**", "**/data/repository/AlarmaRepository*",
+        "**/data/remote/ResultadoRemotoKt*", "**/util/**", "**/model/ClimaKt*",
+        "**/model/RegistroErrores*", "**/model/AlertaErrores*")
+    exclude("**/*\$Companion*")
+}
+val datosCobertura = layout.buildDirectory.file(
+    "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+)
+
+tasks.withType<Test>().configureEach {
+    extensions.configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+val coberturaDebug = tasks.register<JacocoReport>("coberturaDebug") {
+    group = "verification"
+    description = "Reporte HTML y XML de cobertura de la lógica Android."
+    dependsOn("testDebugUnitTest")
+    executionData(datosCobertura)
+    classDirectories.setFrom(clasesLogica)
+    sourceDirectories.setFrom(files("src/main/java"))
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+    doFirst { check(!clasesLogica.isEmpty) { "No se encontraron clases de lógica para medir" } }
+}
+
+tasks.register<JacocoCoverageVerification>("verificarCoberturaDebug") {
+    group = "verification"
+    description = "Exige al menos 80 % de líneas cubiertas en la lógica Android."
+    dependsOn(coberturaDebug)
+    executionData(datosCobertura)
+    classDirectories.setFrom(clasesLogica)
+    violationRules { rule { limit { counter = "LINE"; minimum = "0.80".toBigDecimal() } } }
 }
 
 android {
