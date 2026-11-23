@@ -48,6 +48,7 @@ val datosCobertura = layout.buildDirectory.file(
 )
 
 tasks.withType<Test>().configureEach {
+    useJUnitPlatform()   // Kotest y JUnit 5 (el vintage engine ejecuta tambien las pruebas JUnit 4)
     extensions.configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
         excludes = listOf("jdk.internal.*")
@@ -169,4 +170,12 @@ dependencies {
     // Pruebas de repositorios: respuestas remotas simuladas y corrutinas
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+
+    // Guia 15: Kotest + MockK para ViewModel y repositorio, JUnit 5 para ejecutarlas
+    testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
+    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
+    testImplementation("io.mockk:mockk:1.13.17")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
 }

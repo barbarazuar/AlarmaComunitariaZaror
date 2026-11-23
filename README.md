@@ -4,6 +4,27 @@ Aplicación Android académica para registrar alertas vecinales de demostración
 
 La alarma sonora y las notificaciones son locales. No incluye push a otros teléfonos ni controla una sirena física. Usa datos ficticios para las pruebas.
 
+## Datos del proyecto
+
+| Dato | Detalle |
+|---|---|
+| Asignatura | DSY1105 Desarrollo de Aplicaciones Móviles, Evaluación Parcial 5 |
+| Problema | Una junta de vecinos necesita avisar rápido una emergencia en su sector y dejar un historial de lo ocurrido |
+| Solución | App Android que registra alertas, las guarda en el teléfono (Room) y las sincroniza con dos microservicios Spring Boot. Muestra el clima del sector desde una API externa |
+| Tecnologías | Kotlin, Jetpack Compose (Material 3), MVVM, Room, Retrofit, Spring Boot, H2, Kotest, MockK |
+| Repositorio | https://github.com/barbarazuar/AlarmaComunitariaZaror |
+
+## Integrantes y roles
+
+| Persona | Integrante | Responsabilidad | Dónde está su trabajo |
+|---|---|---|---|
+| 1 | Cristóbal Conejeros | Interfaz y navegación: validaciones, estados de carga y error, edición y eliminación de alertas, pruebas de validación | `app/.../ui`, `navigation`, `util` |
+| 2 | Matías (sus commits aparecen como José Valderrama) | Microservicios Spring Boot: entidades, CRUD de alertas, gestión de usuarios, pruebas del backend | `backend/ms-alertas`, `backend/ms-usuarios` |
+| 3 | Bárbara Zúñiga | Integración: Retrofit, repositorio con Room, manejo sin conexión, API externa de clima y sus pruebas | `app/.../data`, `viewmodel` |
+| 4 | Rodrigo (GitHub: rodriesvidal) | Pruebas y cobertura, versión release firmada, documentación y evidencia de entrega | `docs/`, `scripts/`, `app/build.gradle.kts` |
+
+Los aportes de cada integrante se ven en el historial de commits de GitHub y en las tareas de Trello (ver más abajo). Cada integrante defiende el proyecto de forma individual.
+
 ## Requisitos
 
 - Android Studio y un **JDK completo 21**, incluido el ejecutable `jlink`.
@@ -136,7 +157,7 @@ El contrato completo y códigos de respuesta están en [backend/README.md](backe
 
 ```powershell
 # Desde la raíz
-.\gradlew.bat :app:verificarCoberturaDebug :app:lintDebug
+.\gradlew.bat :app:verificarCoberturaDebug :app:lintDebug --no-configuration-cache
 
 # Desde backend
 .\gradlew.bat test jacocoTestReport jacocoTestCoverageVerification
@@ -144,11 +165,30 @@ El contrato completo y códigos de respuesta están en [backend/README.md](backe
 
 | Módulo | Pruebas correctas | Cobertura de líneas de lógica |
 |---|---:|---:|
-| Android | 77 | 99,51 % |
+| Android | 94 | 99,76 % |
 | ms-alertas | 17 | 94,74 % |
 | ms-usuarios | 13 | 100 % |
 
 Los tres módulos superan el umbral del 80 %. El alcance, las exclusiones y las rutas de reportes están en [docs/PRUEBAS.md](docs/PRUEBAS.md). Los porcentajes no incluyen toda la UI ni reemplazan la prueba en un dispositivo.
+
+### Estrategia de pruebas (guía 15)
+
+| Tipo | Herramientas | Qué prueba | Qué se simula |
+|---|---|---|---|
+| ViewModel | Kotest + MockK + `kotlinx-coroutines-test` | `AlarmaViewModelKotestTest`: validación, guardado, marcar atendida, editar y eliminar | El repositorio (`RepositorioAlarma`) con MockK |
+| Repositorio | Kotest + MockK | `AlarmaRepositoryKotestTest`: con respuesta del servidor queda sincronizada; sin conexión queda pendiente | `AlertaDao` y `AlertasApi` con MockK |
+| Repositorio y red | JUnit + MockWebServer | `AlarmaRepositoryTest`: códigos HTTP, errores del servidor y clima | El servidor HTTP |
+| Lógica y validaciones | JUnit | Validadores, navegación, conversión de códigos del clima | Nada |
+| Interfaz | Compose UI Test (`androidTest`) | `HistorialScreenTest`: lista vacía, tarjetas, marcar atendida y confirmación al eliminar | Los callbacks de la pantalla |
+| Backend | JUnit, Mockito, `@WebMvcTest`, `@DataJpaTest` | Servicios, controladores y repositorios | Repositorio JPA en los tests de servicio |
+
+Las pruebas unitarias se ejecutan con JUnit Platform; el motor vintage mantiene las pruebas escritas en JUnit 4. Para correr las de interfaz hay que tener un emulador o teléfono:
+
+```powershell
+.\gradlew.bat :app:connectedDebugAndroidTest
+```
+
+Las pruebas evitan errores como duplicar una alerta al pulsar dos veces, perder una alerta sin conexión o aceptar una descripción inválida, y permiten cambiar el código con seguridad.
 
 ## APK release firmada
 
@@ -178,6 +218,27 @@ La llave y sus credenciales se conservan en `.private/` con acceso restringido y
 
 Registrar la ejecución en el teléfono real: la comprobación en emulador no certifica ese dispositivo. Consultar el [registro de verificación de la entrega](docs/EVIDENCIA_ENTREGA.md).
 
+## Colaboración: GitHub y Trello
+
+### GitHub
+
+- Rama principal `main`; cada persona trabajó en su propia rama (`feature/backend-microservicios`, `feature/integracion-retrofit-api-externa`, `feature/ui-operaciones-alertas-cristobal`, `feature/pruebas-release-documentacion`) y se integró con Pull Request.
+- Los commits usan el formato `tipo(ámbito): descripción` (por ejemplo `feat(api): integrar API externa`) y están a nombre de quien hizo el trabajo.
+- La rama `integracion-final` reúne las cuatro ramas y resuelve los conflictos entre la interfaz y la capa de datos.
+
+### Trello
+
+Tablero con las listas **Por hacer**, **En curso** y **Finalizado**. Tarjetas por persona:
+
+| Persona | Tarjetas |
+|---|---|
+| 1 | Revisar navegación y formularios, estados de carga y error, integrar operaciones de alertas, pruebas de interfaz |
+| 2 | Proyecto Spring Boot, entidades y persistencia, CRUD de alertas, gestión de usuarios, pruebas del backend |
+| 3 | Configurar Retrofit, conectar repositorio con microservicios, errores y datos locales, API externa, pruebas del repositorio |
+| 4 | Medición de cobertura, pruebas de ViewModel y repositorio, versión release, README, firma y entrega |
+
+Enlace del tablero: _pegar aquí la URL del tablero de Trello_. Las capturas del tablero y de las pruebas están en `docs/capturas/`.
+
 ## Ramas
 
-La implementación de calidad y entrega está en `feature/pruebas-release-documentacion`. Integrar mediante revisión y Pull Request según el acuerdo del equipo. Las ramas de compañeros pendientes no se fusionan automáticamente ni se reescribe su autoría.
+`main` contiene el código integrado. Los cambios entran mediante Pull Request con revisión de otro integrante, sin reescribir la autoría de los commits.
