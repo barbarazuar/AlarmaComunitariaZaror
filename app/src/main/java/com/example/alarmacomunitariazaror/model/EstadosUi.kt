@@ -26,6 +26,7 @@ data class RegistroUiState(
     val aceptaTerminos: Boolean = false,
     val errores: RegistroErrores = RegistroErrores(),
     val cargando: Boolean = false,        // muestra la ruedita en el botón
+    val errorGeneral: String? = null,     // error del servidor que no pertenece a un campo
     val registroExitoso: Boolean = false  // avisa a la pantalla que debe navegar
 )
 
@@ -52,7 +53,29 @@ data class PanelUiState(
     val ubicacion: String = "Ubicación no disponible",
     val fotoUri: Uri? = null,             // foto opcional tomada con la cámara
     val guardando: Boolean = false,
+    val enviadaAlServidor: Boolean = false, // false = quedó solo en el teléfono (sin conexión)
     val alarmaActiva: Boolean = false,    // true mientras suena la alarma
     val mensajeExito: Boolean = false,
     val mensajeError: String? = null
+)
+
+// ---------- HISTORIAL (datos remotos) ----------
+data class AlertasUiState(
+    val refrescando: Boolean = false,
+    val mensaje: String? = null           // resultado de la última operación contra el servidor
+)
+
+// ---------- API EXTERNA: clima del sector ----------
+data class ClimaUiState(
+    val cargando: Boolean = false,
+    val clima: Clima? = null,
+    val error: String? = null
+)
+
+// ---------- VECINOS (remotos, con respaldo local) ----------
+data class VecinosUiState(
+    val cargando: Boolean = false,
+    val vecinos: List<Vecino> = emptyList(),
+    val desdeServidor: Boolean = false,
+    val aviso: String? = null
 )

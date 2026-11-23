@@ -3,14 +3,13 @@ package com.example.alarmacomunitariazaror.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.alarmacomunitariazaror.data.local.AppDatabase
 import com.example.alarmacomunitariazaror.data.repository.AlarmaRepository
+import com.example.alarmacomunitariazaror.data.repository.ResultadoAuth
 import com.example.alarmacomunitariazaror.model.LoginUiState
 import com.example.alarmacomunitariazaror.model.RegistroErrores
 import com.example.alarmacomunitariazaror.model.RegistroUiState
 import com.example.alarmacomunitariazaror.model.Usuario
 import com.example.alarmacomunitariazaror.util.ValidadorFormulario
-import com.example.alarmacomunitariazaror.util.sha256
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +19,7 @@ import kotlinx.coroutines.launch
 // AndroidViewModel = ViewModel que recibe la Application (necesaria para abrir Room)
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = AlarmaRepository(AppDatabase.obtener(application))
+    private val repo = AlarmaRepository.crear(application)
 
     // Patrón _privado / público: solo el ViewModel modifica; la UI solo lee.
     private val _registro = MutableStateFlow(RegistroUiState())
@@ -56,24 +55,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _registro.update { it.copy(errores = errores) }
         if (errores.hayErrores()) return // si hay errores, se detiene aquí
 
-        // 2) Guardar en Room dentro de una corrutina (hilo secundario)
+        // 2) Registrar en ms-usuarios (o solo en Room si no hay conexión) dentro de una corrutina
         viewModelScope.launch {
-            _registro.update { it.copy(cargando = true) }
-            val creado = repo.registrarUsuario(
-                Usuario(
-                    nombre = s.nombre.trim(),
-                    correo = s.correo.trim().lowercase(),   // correo siempre en minúsculas
-                    claveHash = s.clave.sha256(),           // se guarda la huella, no la clave
-                    direccion = s.direccion.trim()
-                )
-            )
+            _registro.update { it.copy(cargando = true, errorGeneral = null) }
+            val resultado = repo.registrarUsuario(s.nombre, s.correo, s.clave, s.direccion)
             _registro.update {
-                it.copy(
-                    cargando = false,
-                    registroExitoso = creado,
-                    // si no se creó es porque el correo ya existía
-                    errores = if (creado) it.errores else it.errores.copy(correo = "Este correo ya está registrado")
-                )
+                when (resultado) {
+                    is ResultadoAuth.Exito -> it.copy(cargando = false, registroExitoso = true)
+                    ResultadoAuth.CorreoDuplicado -> it.copy(
+                        cargando = false,
+                        errores = it.errores.copy(correo = "Este correo ya está registrado")
+                    )
+                    is ResultadoAuth.Error -> it.copy(cargando = false, errorGeneral = resultado.mensaje)
+                    ResultadoAuth.CredencialesInvalidas -> it.copy(cargando = false)
+                }
             }
         }
     }
@@ -95,12 +90,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             _login.update { it.copy(cargando = true, errorGeneral = null) }
-            val u = repo.buscarUsuario(s.correo.trim().lowercase())
-            if (u != null && u.claveHash == s.clave.sha256()) {
-                _usuario.value = u                                   // guarda la sesión
-                _login.update { it.copy(cargando = false, sesionIniciada = true) }
-            } else {
-                _login.update { it.copy(cargando = false, errorGeneral = "Correo o contraseña incorrectos") }
+            when (val r = repo.iniciarSesion(s.correo, s.clave)) {
+                is ResultadoAuth.Exito -> {
+                    _usuario.value = r.usuario                           // guarda la sesión
+                    _login.update { it.copy(cargando = false, sesionIniciada = true) }
+                }
+                is ResultadoAuth.Error ->
+                    _login.update { it.copy(cargando = false, errorGeneral = r.mensaje) }
+                else ->
+                    _login.update { it.copy(cargando = false, errorGeneral = "Correo o contraseña incorrectos") }
             }
         }
     }

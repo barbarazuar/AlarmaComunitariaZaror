@@ -11,5 +11,6 @@ data class Usuario(
     val nombre: String,
     val correo: String,
     val claveHash: String,   // NUNCA guardamos la contrasena tal cual, solo su "huella" SHA-256
-    val direccion: String    // ej: "Los Jazmines 425" (ficticia en pruebas)
+    val direccion: String,   // ej: "Los Jazmines 425" (ficticia en pruebas)
+    val remoteId: Long? = null // id en ms-usuarios; null = cuenta creada sin conexion
 )
