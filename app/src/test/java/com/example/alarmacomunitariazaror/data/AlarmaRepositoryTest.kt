@@ -75,7 +75,7 @@ class AlarmaRepositoryTest {
     fun `guardar alerta con servidor disponible queda sincronizada con el id remoto`() = runTest {
         servidor.enqueue(json(201, alertaJson(7)))
 
-        val envio = repo.guardarAlerta(alertaLocal(), usuarioRemotoId = 3)
+        val envio = repo.guardarAlerta(alertaLocal().copy(usuarioRemotoId = 3))
 
         assertEquals(EstadoEnvio.SINCRONIZADA, envio)
         val guardada = alertaDao.datos.single()
@@ -121,6 +121,16 @@ class AlarmaRepositoryTest {
 
         assertEquals(2, enviadas)
         assertEquals(setOf(10L, 11L), alertaDao.datos.map { it.remoteId }.toSet())
+    }
+
+    @Test
+    fun `una alerta creada sin conexion conserva el usuario al reenviarse`() = runTest {
+        crearRepoSinServidor().guardarAlerta(alertaLocal().copy(usuarioRemotoId = 3))
+        servidor.enqueue(json(201, alertaJson(12)))
+
+        repo.sincronizarPendientes()
+
+        assertTrue(servidor.takeRequest().body.readUtf8().contains("\"usuarioId\":3"))
     }
 
     @Test

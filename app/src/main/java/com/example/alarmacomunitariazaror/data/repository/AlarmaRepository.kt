@@ -56,13 +56,14 @@ class AlarmaRepository(
     // ---------------------------------------------------------------- Alertas
 
     // Guarda en Room y trata de enviar al microservicio. Si Room falla, lanza la excepcion.
-    suspend fun guardarAlerta(alerta: Alerta, usuarioRemotoId: Long? = null): EstadoEnvio {
+    // El usuarioRemotoId viaja dentro de la alerta, asi tambien se envia al reintentar.
+    suspend fun guardarAlerta(alerta: Alerta): EstadoEnvio {
         val id = alertaDao.insertar(alerta.copy(sincronizada = false, remoteId = null)).toInt()
-        return enviar(alerta.copy(id = id), usuarioRemotoId)
+        return enviar(alerta.copy(id = id))
     }
 
-    private suspend fun enviar(local: Alerta, usuarioRemotoId: Long?): EstadoEnvio =
-        when (val r = llamar { alertasApi.crear(local.aRequest(usuarioRemotoId)) }) {
+    private suspend fun enviar(local: Alerta): EstadoEnvio =
+        when (val r = llamar { alertasApi.crear(local.aRequest()) }) {
             is ResultadoRemoto.Exito -> {
                 alertaDao.actualizar(local.copy(remoteId = r.datos.id, estado = r.datos.estado, sincronizada = true))
                 EstadoEnvio.SINCRONIZADA
@@ -74,7 +75,7 @@ class AlarmaRepository(
     suspend fun sincronizarPendientes(): Int {
         var enviadas = 0
         for (alerta in alertaDao.pendientes()) {
-            if (enviar(alerta, null) == EstadoEnvio.SINCRONIZADA) enviadas++ else break
+            if (enviar(alerta) == EstadoEnvio.SINCRONIZADA) enviadas++ else break
         }
         return enviadas
     }
@@ -127,7 +128,7 @@ class AlarmaRepository(
             alertaDao.actualizar(alerta)
             return ResultadoRemoto.Exito(Unit)
         }
-        return when (val r = llamar { alertasApi.actualizar(remoteId, alerta.aRequest(null)) }) {
+        return when (val r = llamar { alertasApi.actualizar(remoteId, alerta.aRequest()) }) {
             is ResultadoRemoto.Exito -> {
                 alertaDao.actualizar(r.datos.aLocal().copy(id = alerta.id, fotoUri = alerta.fotoUri))
                 ResultadoRemoto.Exito(Unit)
@@ -253,7 +254,7 @@ class AlarmaRepository(
 
 // ---- Conversion entre el modelo de Room y el del servidor ----
 
-private fun Alerta.aRequest(usuarioRemotoId: Long?) = AlertaRequestRemoto(
+private fun Alerta.aRequest() = AlertaRequestRemoto(
     vecinoNombre = vecinoNombre,
     usuarioId = usuarioRemotoId,
     ubicacion = ubicacion,
@@ -269,6 +270,7 @@ private fun AlertaRemota.aLocal() = Alerta(
     tipoEmergencia = tipoEmergencia,
     descripcion = descripcion.orEmpty(),
     remoteId = id,
+    usuarioRemotoId = usuarioId,
     estado = estado,
     sincronizada = true
 )

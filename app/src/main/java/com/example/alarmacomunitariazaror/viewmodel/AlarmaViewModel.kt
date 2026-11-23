@@ -90,11 +90,12 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
             fechaHora = System.currentTimeMillis(),   // hora actual en milisegundos
             tipoEmergencia = tipo.etiqueta,
             descripcion = s.descripcion.trim(),
-            fotoUri = s.fotoUri?.toString()
+            fotoUri = s.fotoUri?.toString(),
+            usuarioRemotoId = usuarioRemotoId
         )
         _panel.update { it.copy(guardando = true, mensajeError = null) }
         viewModelScope.launch {
-            runCatching { repo.guardarAlerta(alerta, usuarioRemotoId) }
+            runCatching { repo.guardarAlerta(alerta) }
                 .onSuccess { envio ->
                     _panel.update {
                         it.copy(

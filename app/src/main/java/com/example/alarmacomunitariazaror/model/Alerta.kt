@@ -16,6 +16,7 @@ data class Alerta(
     val fotoUri: String? = null,   // foto opcional; el "?" significa que puede ser null
     // ---- Relacion con el microservicio ms-alertas ----
     val remoteId: Long? = null,    // id en el servidor; null = aun no se ha enviado
+    val usuarioRemotoId: Long? = null, // id (en ms-usuarios) de quien la activo; null = cuenta sin servidor
     val estado: String = ESTADO_ACTIVA,
     val sincronizada: Boolean = false // false = pendiente de enviar al servidor
 ) {
