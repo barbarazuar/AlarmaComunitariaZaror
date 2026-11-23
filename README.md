@@ -36,6 +36,14 @@ cd AlarmaComunitariaZarorackend
 .\gradlew.bat :ms-alertas:bootRun      # terminal 2, puerto 8082
 ```
 
+Para hacerlo todo en un paso, el script `scripts/Iniciar-Todo.ps1` detecta la IP del computador, levanta los dos microservicios, espera a que respondan y compila la APK apuntando a esa IP. Con `-Instalar` la instala en un teléfono conectado por USB y con `-Firewall` (PowerShell como administrador) abre los puertos 8081 y 8082:
+
+```powershell
+.\scripts\Iniciar-Todo.ps1 -Instalar
+```
+
+El teléfono debe estar en la misma red WiFi que el computador. La APK queda en `dist/entrega/`.
+
 Para la aplicación, abrir la carpeta raíz en Android Studio (genera `local.properties` con el SDK) y ejecutar `app`, o compilar con `.\gradlew.bat :app:assembleDebug`. Los pasos completos están en las secciones siguientes.
 
 ## Requisitos
