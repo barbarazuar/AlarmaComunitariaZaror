@@ -75,6 +75,8 @@ El host predeterminado **10.0.2.2** corresponde al PC visto desde el emulador An
 
 `backendHost` se incorpora a `BuildConfig.BACKEND_HOST` y configura los dos clientes, en puertos 8081 y 8082. No contiene protocolo ni puerto. Revisar firewall y que la red permita comunicación entre dispositivos.
 
+En **Android 17 o superior**, pulsa **Permitir red local** y concede el permiso antes de usar los servicios locales. Si se deniega, la app mantiene el respaldo local y muestra el aviso para poder solicitarlo de nuevo. El permiso no es necesario en versiones anteriores de Android.
+
 Como alternativa por USB, con depuración autorizada:
 
 ```powershell
