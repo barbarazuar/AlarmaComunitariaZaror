@@ -1,5 +1,30 @@
 # Registro de verificación de la entrega
 
+## Main integrado
+
+El 23 de noviembre de 2026 se verificó la integración de `main` a partir de
+`123f09c`, que incorpora la interfaz de Cristóbal y los casos Kotest/MockK.
+Pasaron 94 pruebas Android (414/415 líneas de lógica, 99,76 %), 17 de alertas
+(94,74 %) y 13 de usuarios (100 %): **124 pruebas correctas**, sin omisiones.
+Lint debug y compilación release finalizaron correctamente.
+
+La release integrada se instaló y arrancó en el emulador API 37. Se comprobó
+edición de descripción mediante el diálogo de la UI y PUT real al servidor,
+así como cancelación y confirmación de borrado sobre una alerta ficticia propia.
+Las capturas de la integración están en [capturas](capturas/README.md).
+Las pruebas instrumentadas `HistorialScreenTest` no se incluyen en las 124.
+
+La validación local usa el PC `192.168.1.9`. El equipo usará otro PC en la defensa
+y todavía no conoce su IPv4: falta recompilar para ese destino y probar en el
+teléfono físico. Ver [control de cierre](CIERRE_ENTREGA.md).
+El commit, host, fecha, firma y SHA-256 exactos de la APK distribuida se conservan
+en los archivos producidos por `Preparar-Entrega.ps1` en `dist/entrega/`.
+
+## Registro histórico de la versión anterior
+
+La ficha siguiente documenta la APK previa a la integración de la interfaz y
+las nuevas pruebas. No corresponde a la APK integrada de `main`.
+
 Fecha: 23 de noviembre de 2026. Rama: `feature/pruebas-release-documentacion`.
 Código de la APK final: `1a85918` (los commits posteriores de documentación no
 cambian su código). Este registro corresponde a la APK identificada por su hash;

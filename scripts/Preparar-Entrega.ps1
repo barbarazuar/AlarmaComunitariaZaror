@@ -37,7 +37,13 @@ try {
     foreach ($modulo in @('app', 'backend/ms-alertas', 'backend/ms-usuarios')) {
         $destino = Join-Path $salida ($modulo.Replace('/', '-'))
         [void](New-Item -ItemType Directory -Path $destino -Force)
-        Copy-Item -LiteralPath (Join-Path $raiz "$modulo/build/reports") -Destination $destino -Recurse -Force
+        # Los reportes JUnit Platform incluyen nombres de caso extensos. Robocopy
+        # admite rutas largas en Windows PowerShell 5, sin borrar archivos previos.
+        $origenReportes = Join-Path $raiz "$modulo/build/reports"
+        $destinoReportes = Join-Path $destino 'reports'
+        & robocopy.exe $origenReportes $destinoReportes /E /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "Fallo la copia de reportes de $modulo (robocopy: $LASTEXITCODE)." }
+        $global:LASTEXITCODE = 0
     }
     Write-Output "Entrega verificada en $salida"
 } finally { Pop-Location }
