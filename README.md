@@ -19,9 +19,9 @@ La alarma sonora y las notificaciones son locales. No incluye push a otros telé
 | Persona | Integrante | Responsabilidad | Dónde está su trabajo |
 |---|---|---|---|
 | 1 | Cristóbal Conejeros | Interfaz y navegación: validaciones, estados de carga y error, edición y eliminación de alertas, pruebas de validación | `app/.../ui`, `navigation`, `util` |
-| 2 | Matías (sus commits aparecen como José Valderrama) | Microservicios Spring Boot: entidades, CRUD de alertas, gestión de usuarios, pruebas del backend | `backend/ms-alertas`, `backend/ms-usuarios` |
+| 2 | José Valderrama | Microservicios Spring Boot: entidades, CRUD de alertas, gestión de usuarios, pruebas del backend | `backend/ms-alertas`, `backend/ms-usuarios` |
 | 3 | Bárbara Zúñiga | Integración: Retrofit, repositorio con Room, manejo sin conexión, API externa de clima y sus pruebas | `app/.../data`, `viewmodel` |
-| 4 | Rodrigo (GitHub: rodriesvidal) | Pruebas y cobertura, versión release firmada, documentación y evidencia de entrega | `docs/`, `scripts/`, `app/build.gradle.kts` |
+| 4 | Rodrigo Vidal | Pruebas y cobertura, versión release firmada, documentación y evidencia de entrega | `docs/`, `scripts/`, `app/build.gradle.kts` |
 
 Los aportes de cada integrante se ven en el historial de commits de GitHub y en las tareas de Trello (ver más abajo). Cada integrante defiende el proyecto de forma individual.
 
