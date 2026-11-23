@@ -52,4 +52,12 @@ object ValidadorFormulario {
         valor.length > 280 -> "Máximo 280 caracteres (llevas ${valor.length})"
         else -> null
     }
+
+    // Validación para cuando se edita una alerta existente en el historial
+    fun descripcionEdicion(valor: String): String? = when {
+        valor.isBlank() -> "La descripción no puede quedar vacía"
+        valor.trim().length < 5 -> "Escribe al menos 5 caracteres"
+        valor.length > 280 -> "Máximo 280 caracteres (llevas ${valor.length})"
+        else -> null
+    }
 }

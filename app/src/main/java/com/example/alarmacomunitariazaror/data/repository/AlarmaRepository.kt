@@ -15,6 +15,10 @@ class AlarmaRepository(db: AppDatabase) {
 
     suspend fun guardarAlerta(alerta: Alerta) = alertaDao.insertar(alerta)
 
+    suspend fun actualizarAlerta(alerta: Alerta) = alertaDao.actualizar(alerta)
+
+    suspend fun eliminarAlerta(alerta: Alerta) = alertaDao.eliminar(alerta)
+
     // Devuelve true si se creo, false si ya existia ese correo
     suspend fun registrarUsuario(usuario: Usuario): Boolean {
         if (usuarioDao.buscarPorCorreo(usuario.correo) != null) return false

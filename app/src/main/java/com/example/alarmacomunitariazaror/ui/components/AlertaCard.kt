@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,15 +31,33 @@ import coil.compose.AsyncImage
 import com.example.alarmacomunitariazaror.model.Alerta
 import com.example.alarmacomunitariazaror.util.comoFechaLegible
 
-// Una tarjeta = una alerta del historial
+// Una tarjeta = una alerta del historial con acciones para editar y eliminar
 @Composable
-fun AlertaCard(alerta: Alerta) {
+fun AlertaCard(
+    alerta: Alerta,
+    onEditar: () -> Unit = {},
+    onEliminar: () -> Unit = {}
+) {
     Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                Spacer(Modifier.width(8.dp))
-                Text(alerta.tipoEmergencia, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    Spacer(Modifier.width(8.dp))
+                    Text(alerta.tipoEmergencia, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                Row {
+                    IconButton(onClick = onEditar) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Editar alerta", tint = MaterialTheme.colorScheme.primary)
+                    }
+                    IconButton(onClick = onEliminar) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Eliminar alerta", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
             }
             Text(alerta.descripcion)
             Text("Activada por ${alerta.vecinoNombre}", style = MaterialTheme.typography.bodySmall)
