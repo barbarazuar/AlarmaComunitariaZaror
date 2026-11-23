@@ -28,11 +28,17 @@ val claveAlmacen = propiedadFirma("storePassword", "ZAROR_STORE_PASSWORD")
 val aliasLlave = propiedadFirma("keyAlias", "ZAROR_KEY_ALIAS")
 val claveLlave = propiedadFirma("keyPassword", "ZAROR_KEY_PASSWORD")
 val firmaCompleta = archivoLlave?.isFile == true && claveAlmacen != null && aliasLlave != null && claveLlave != null
+// Sin llave propia, la release se firma con la llave de depuracion de Android para que
+// cualquiera pueda clonar el repositorio y generar una APK instalable. La entrega oficial
+// usa la llave privada (carpeta .private o variables ZAROR_*). Esta tarea sirve para
+// exigirla de forma explicita antes de generar la APK de entrega.
 val validarFirmaRelease = tasks.register("validarFirmaRelease") {
     group = "verification"
     doLast { check(firmaCompleta) { "Falta firma release. Ejecuta scripts/Nueva-Llave.ps1 o configura ZAROR_STORE_FILE, ZAROR_STORE_PASSWORD, ZAROR_KEY_ALIAS y ZAROR_KEY_PASSWORD." } }
 }
-tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(validarFirmaRelease) }
+if (!firmaCompleta) {
+    logger.warn("Aviso: no hay llave de entrega; la release se firmara con la llave de depuracion.")
+}
 
 // Lógica sin UI Compose, DTO, Room generado ni fábricas Android.
 val clasesLogica = fileTree(layout.buildDirectory.dir(
@@ -110,7 +116,7 @@ android {
     buildTypes {
         release {
             isDebuggable = false
-            if (firmaCompleta) signingConfig = signingConfigs.getByName("entrega")
+            signingConfig = if (firmaCompleta) signingConfigs.getByName("entrega") else signingConfigs.getByName("debug")
             optimization {
                 // La optimización parcial provocó IllegalAccessError en kotlin.sequences
                 // al iniciar la APK instalada. Priorizar una entrega reproducible.

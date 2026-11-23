@@ -25,6 +25,27 @@ La alarma sonora y las notificaciones son locales. No incluye push a otros telé
 
 Los aportes de cada integrante se ven en el historial de commits de GitHub y en las tareas de Trello (ver más abajo). Cada integrante defiende el proyecto de forma individual.
 
+## Clonar y ejecutar en cualquier PC
+
+El repositorio no contiene llaves ni contraseñas. Para ejecutarlo en otro computador solo se necesita el JDK y el SDK de Android (ver requisitos). Los microservicios no dependen de Android ni de ninguna llave.
+
+```powershell
+git clone https://github.com/barbarazuar/AlarmaComunitariaZaror.git
+cd AlarmaComunitariaZarorackend
+.\gradlew.bat :ms-usuarios:bootRun     # terminal 1, puerto 8081
+.\gradlew.bat :ms-alertas:bootRun      # terminal 2, puerto 8082
+```
+
+Para hacerlo todo en un paso, el script `scripts/Iniciar-Todo.ps1` detecta la IP del computador, levanta los dos microservicios, espera a que respondan y compila la APK apuntando a esa IP. Con `-Instalar` la instala en un teléfono conectado por USB y con `-Firewall` (PowerShell como administrador) abre los puertos 8081 y 8082. Al terminar de levantar los servicios abre Edge con sus endpoints (se desactiva con `-SinNavegador`):
+
+```powershell
+.\scripts\Iniciar-Todo.ps1 -Instalar
+```
+
+El teléfono debe estar en la misma red WiFi que el computador. La APK queda en `dist/entrega/`.
+
+Para la aplicación, abrir la carpeta raíz en Android Studio (genera `local.properties` con el SDK) y ejecutar `app`, o compilar con `.\gradlew.bat :app:assembleDebug`. Los pasos completos están en las secciones siguientes.
+
 ## Requisitos
 
 - Android Studio y un **JDK completo 21**, incluido el ejecutable `jlink`.
@@ -199,7 +220,7 @@ Generar una llave nueva solo si el proyecto no tiene una llave de entrega existe
 .\scripts\Preparar-Entrega.ps1 -BackendHost 10.0.2.2
 ```
 
-La llave y sus credenciales se conservan en `.private/` con acceso restringido y quedan excluidas de Git. También se admiten variables de entorno `ZAROR_STORE_FILE`, `ZAROR_STORE_PASSWORD`, `ZAROR_KEY_ALIAS` y `ZAROR_KEY_PASSWORD`. La compilación release falla si falta la configuración.
+La llave y sus credenciales se conservan en `.private/` con acceso restringido y quedan excluidas de Git. También se admiten variables de entorno `ZAROR_STORE_FILE`, `ZAROR_STORE_PASSWORD`, `ZAROR_KEY_ALIAS` y `ZAROR_KEY_PASSWORD`. Sin llave configurada, la compilación release no falla: se firma con la llave de depuración de Android y muestra un aviso, de modo que cualquiera pueda generar una APK instalable. Esa APK sirve para pruebas; la entrega oficial se genera con la llave privada. La tarea `validarFirmaRelease` exige la llave de forma explícita.
 
 `Preparar-Entrega.ps1` ejecuta pruebas y cobertura, lint, build release, verificación con apksigner y exporta a `dist/entrega/` la APK, huella SHA-256 y reportes. Release desactiva el registro HTTP de OkHttp. Leer [firma y entrega segura](docs/FIRMA_Y_ENTREGA.md) antes de entregar la llave al docente.
 
