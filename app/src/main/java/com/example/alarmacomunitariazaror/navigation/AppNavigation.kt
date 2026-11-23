@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -80,20 +81,32 @@ fun AppNavigation() {
 
         composable(Screen.Historial.route) {
             val alertas by alarmaViewModel.alertas.collectAsState()
+            val remoto by alarmaViewModel.remoto.collectAsState()
+            // Al abrir el historial se sincroniza con ms-alertas
+            LaunchedEffect(Unit) { alarmaViewModel.refrescarAlertas() }
             PantallaSecundaria(
                 titulo = Screen.Historial.titulo,
                 onVolver = { navController.popBackStack() }
             ) {
-                HistorialScreen(alertas)
+                HistorialScreen(
+                    alertas = alertas,
+                    refrescando = remoto.refrescando,
+                    mensaje = remoto.mensaje,
+                    onRefrescar = alarmaViewModel::refrescarAlertas,
+                    onAtender = alarmaViewModel::marcarAtendida,
+                    onEliminar = alarmaViewModel::eliminarAlerta
+                )
             }
         }
 
         composable(Screen.Vecinos.route) {
+            val vecinos by alarmaViewModel.vecinos.collectAsState()
+            LaunchedEffect(Unit) { alarmaViewModel.cargarVecinos() }
             PantallaSecundaria(
                 titulo = Screen.Vecinos.titulo,
                 onVolver = { navController.popBackStack() }
             ) {
-                VecinosScreen()
+                VecinosScreen(vecinos)
             }
         }
     }

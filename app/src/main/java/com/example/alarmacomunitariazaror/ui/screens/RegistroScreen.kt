@@ -89,6 +89,14 @@ fun RegistroScreen(
             )
         }
 
+        AnimatedVisibility(visible = estado.errorGeneral != null) {
+            Text(
+                text = estado.errorGeneral ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Button(
             onClick = viewModel::registrar,
             enabled = !estado.cargando,
