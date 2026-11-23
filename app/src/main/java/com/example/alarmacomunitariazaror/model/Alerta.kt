@@ -13,5 +13,14 @@ data class Alerta(
     val fechaHora: Long,           // milisegundos desde 1970; se formatea al mostrarlo
     val tipoEmergencia: String,    // etiqueta del TipoEmergencia elegido
     val descripcion: String,       // detalle escrito por el vecino
-    val fotoUri: String? = null    // foto opcional; el "?" significa que puede ser null
-)
+    val fotoUri: String? = null,   // foto opcional; el "?" significa que puede ser null
+    // ---- Relacion con el microservicio ms-alertas ----
+    val remoteId: Long? = null,    // id en el servidor; null = aun no se ha enviado
+    val estado: String = ESTADO_ACTIVA,
+    val sincronizada: Boolean = false // false = pendiente de enviar al servidor
+) {
+    companion object {
+        const val ESTADO_ACTIVA = "ACTIVA"
+        const val ESTADO_ATENDIDA = "ATENDIDA"
+    }
+}

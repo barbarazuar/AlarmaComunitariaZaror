@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,7 +30,11 @@ import com.example.alarmacomunitariazaror.util.comoFechaLegible
 
 // Una tarjeta = una alerta del historial
 @Composable
-fun AlertaCard(alerta: Alerta) {
+fun AlertaCard(
+    alerta: Alerta,
+    onAtender: (() -> Unit)? = null,    // marcar como atendida (PATCH)
+    onEliminar: (() -> Unit)? = null    // eliminar (DELETE)
+) {
     Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -43,6 +48,21 @@ fun AlertaCard(alerta: Alerta) {
                 "${alerta.fechaHora.comoFechaLegible()} · ${alerta.ubicacion}",
                 style = MaterialTheme.typography.bodySmall
             )
+            Text(
+                "Estado: ${alerta.estado} · " +
+                    if (alerta.sincronizada) "enviada al servidor" else "pendiente de envío",
+                style = MaterialTheme.typography.labelMedium
+            )
+            if (onAtender != null || onEliminar != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onAtender != null && alerta.estado != Alerta.ESTADO_ATENDIDA) {
+                        TextButton(onClick = onAtender) { Text("Marcar atendida") }
+                    }
+                    if (onEliminar != null) {
+                        TextButton(onClick = onEliminar) { Text("Eliminar") }
+                    }
+                }
+            }
             // let { } se ejecuta solo si fotoUri no es null
             alerta.fotoUri?.let { uri ->
                 AsyncImage(

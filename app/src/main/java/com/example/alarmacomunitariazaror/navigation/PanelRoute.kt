@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,8 @@ fun PanelRoute(
 ) {
     val context = LocalContext.current
     val panel by alarmaViewModel.panel.collectAsState()
+    val clima by alarmaViewModel.clima.collectAsState()
+    LaunchedEffect(Unit) { alarmaViewModel.cargarClima() }
     val usuario by authViewModel.usuario.collectAsState()
     val notificador = remember(context) { Notificador(context.applicationContext) }
     val gestorUbicacion = remember(context) { GestorUbicacion(context.applicationContext) }
@@ -121,14 +124,15 @@ fun PanelRoute(
             onDismissRequest = { mostrarConfirmacion = false },
             title = { Text("Confirmar alerta") },
             text = {
-                Text("Esta acción guardará una alerta de demostración solo en este dispositivo.")
+                Text("Esta acción guardará una alerta de demostración y la enviará al servidor si hay conexión.")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         mostrarConfirmacion = false
                         alarmaViewModel.activarAlarma(
-                            vecinoNombre = usuario?.nombre ?: "Vecino demo"
+                            vecinoNombre = usuario?.nombre ?: "Vecino demo",
+                            usuarioRemotoId = usuario?.remoteId
                         ) { guardada ->
                             if (guardada) {
                                 GestorSonido.iniciar(context)
@@ -169,6 +173,7 @@ fun PanelRoute(
         Box(Modifier.padding(padding)) {
             PanelScreen(
                 panel = panel,
+                clima = clima,
                 nombreVecino = usuario?.nombre ?: "Vecino demo",
                 onTipoChange = alarmaViewModel::onTipoChange,
                 onDescripcionChange = alarmaViewModel::onDescripcionChange,

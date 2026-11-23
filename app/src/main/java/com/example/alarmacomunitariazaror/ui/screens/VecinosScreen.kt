@@ -9,25 +9,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.alarmacomunitariazaror.data.repository.VecinosFicticios
+import com.example.alarmacomunitariazaror.model.VecinosUiState
 
-// Lista de contactos del sector (datos ficticios)
+// Vecinos del sector: vienen de ms-usuarios; sin conexion se muestran contactos de demostracion
 @Composable
-fun VecinosScreen() {
+fun VecinosScreen(estado: VecinosUiState) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item { // un elemento suelto al inicio de la lista
-            Text("Contactos del sector (datos ficticios)", style = MaterialTheme.typography.titleMedium)
+            Text(
+                if (estado.desdeServidor) "Vecinos registrados en el sector"
+                else "Contactos del sector (datos ficticios)",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
-        items(VecinosFicticios.lista) { vecino ->
+        if (estado.cargando) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        estado.aviso?.let { aviso -> item { Text(aviso, style = MaterialTheme.typography.bodySmall) } }
+        items(estado.vecinos) { vecino ->
             Card(Modifier.fillMaxWidth()) {
                 ListItem(
                     headlineContent = { Text(vecino.nombre) },
