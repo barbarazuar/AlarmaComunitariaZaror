@@ -104,4 +104,33 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
 
     // Detiene la alarma y limpia el formulario (conserva la última ubicación)
     fun desactivarAlarma() = _panel.update { PanelUiState(ubicacion = it.ubicacion) }
+
+    fun actualizarAlerta(alerta: Alerta, nuevaDescripcion: String, onResultado: (Boolean) -> Unit = {}) {
+        val desc = nuevaDescripcion.trim()
+        if (desc.isBlank()) {
+            onResultado(false)
+            return
+        }
+        viewModelScope.launch {
+            runCatching {
+                repo.actualizarAlerta(alerta.copy(descripcion = desc))
+            }.onSuccess {
+                onResultado(true)
+            }.onFailure {
+                onResultado(false)
+            }
+        }
+    }
+
+    fun eliminarAlerta(alerta: Alerta, onResultado: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            runCatching {
+                repo.eliminarAlerta(alerta)
+            }.onSuccess {
+                onResultado(true)
+            }.onFailure {
+                onResultado(false)
+            }
+        }
+    }
 }

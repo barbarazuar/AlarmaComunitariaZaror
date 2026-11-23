@@ -84,7 +84,15 @@ fun AppNavigation() {
                 titulo = Screen.Historial.titulo,
                 onVolver = { navController.popBackStack() }
             ) {
-                HistorialScreen(alertas)
+                HistorialScreen(
+                    alertas = alertas,
+                    onActualizarAlerta = { alerta, nuevaDesc ->
+                        alarmaViewModel.actualizarAlerta(alerta, nuevaDesc)
+                    },
+                    onEliminarAlerta = { alerta ->
+                        alarmaViewModel.eliminarAlerta(alerta)
+                    }
+                )
             }
         }
 
