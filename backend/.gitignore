@@ -1,5 +1,8 @@
 .gradle/
 build/
-data/
+# Las bases H2 no se suben, pero la carpeta si (con .gitkeep) para que exista desde el clon.
+# Si no existe y se levantan los dos microservicios a la vez, ambos intentan crearla y uno falla.
+data/*
+!data/.gitkeep
 *.iml
 .idea/
