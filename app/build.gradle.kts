@@ -111,8 +111,9 @@ android {
             isDebuggable = false
             if (firmaCompleta) signingConfig = signingConfigs.getByName("entrega")
             optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+                // La optimización parcial provocó IllegalAccessError en kotlin.sequences
+                // al iniciar la APK instalada. Priorizar una entrega reproducible.
+                enable = false
             }
         }
     }
