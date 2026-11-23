@@ -21,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRACION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE alertas ADD COLUMN remoteId INTEGER")
+                db.execSQL("ALTER TABLE alertas ADD COLUMN usuarioRemotoId INTEGER")
                 db.execSQL("ALTER TABLE alertas ADD COLUMN estado TEXT NOT NULL DEFAULT 'ACTIVA'")
                 db.execSQL("ALTER TABLE alertas ADD COLUMN sincronizada INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE usuarios ADD COLUMN remoteId INTEGER")
