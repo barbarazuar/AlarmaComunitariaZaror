@@ -6,6 +6,7 @@
     .\scripts\Iniciar-Todo.ps1                 detecta la IP, levanta servicios y compila la APK
     .\scripts\Iniciar-Todo.ps1 -Instalar       ademas instala la APK en el telefono conectado por USB
     .\scripts\Iniciar-Todo.ps1 -SoloServicios  solo levanta los microservicios
+    .\scripts\Iniciar-Todo.ps1 -SinNavegador   no abre Edge con los endpoints
     .\scripts\Iniciar-Todo.ps1 -Firewall       abre los puertos 8081 y 8082 (requiere PowerShell como administrador)
     .\scripts\Iniciar-Todo.ps1 -BackendHost 192.168.1.20   fuerza otra IP
 #>
@@ -13,6 +14,7 @@ param(
     [string]$BackendHost,
     [switch]$Instalar,
     [switch]$SoloServicios,
+    [switch]$SinNavegador,
     [switch]$Firewall,
     [string]$JavaHome = $env:JAVA_HOME,
     [string]$AndroidSdk = $env:ANDROID_HOME
@@ -71,6 +73,17 @@ function Esperar-Servicio($url, $nombre) {
 }
 Esperar-Servicio 'http://localhost:8081/api/usuarios' 'ms-usuarios'
 Esperar-Servicio 'http://localhost:8082/api/alertas' 'ms-alertas'
+
+# --- Abrir los microservicios en Edge (o en el navegador predeterminado si no esta) ---
+if (-not $SinNavegador) {
+    $urls = @('http://localhost:8081/api/usuarios', 'http://localhost:8082/api/alertas')
+    try { Start-Process 'msedge' -ArgumentList $urls -ErrorAction Stop }
+    catch {
+        Write-Warning 'No se pudo abrir Edge; se usa el navegador predeterminado.'
+        foreach ($u in $urls) { Start-Process $u }
+    }
+    Write-Output 'Endpoints abiertos en el navegador.'
+}
 
 if ($SoloServicios) {
     Write-Output "Servicios activos. Desde el telefono: http://${BackendHost}:8081 y http://${BackendHost}:8082"
