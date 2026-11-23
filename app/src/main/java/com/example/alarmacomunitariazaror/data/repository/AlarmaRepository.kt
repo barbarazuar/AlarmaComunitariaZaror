@@ -21,8 +21,13 @@ import com.example.alarmacomunitariazaror.model.Clima
 import com.example.alarmacomunitariazaror.model.Usuario
 import com.example.alarmacomunitariazaror.model.Vecino
 import com.example.alarmacomunitariazaror.model.descripcionClima
+import com.example.alarmacomunitariazaror.nativo.ManejadorFoto
 import com.example.alarmacomunitariazaror.util.sha256
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 
 // Resultado de guardar una alerta: llego al servidor o quedo solo en el telefono
 enum class EstadoEnvio { SINCRONIZADA, SOLO_LOCAL }
@@ -48,7 +53,10 @@ class AlarmaRepository(
     private val alertasApi: AlertasApi,
     private val usuariosApi: UsuariosApi,
     private val climaApi: ClimaApi,
-    private val urlClima: String = RetrofitClient.URL_CLIMA
+    private val urlClima: String = RetrofitClient.URL_CLIMA,
+    // Lectura y escritura de fotos del telefono. En las pruebas se reemplazan; por defecto no hacen nada.
+    private val leerFoto: suspend (String) -> ByteArray? = { null },
+    private val guardarFotoDescargada: suspend (Long, ByteArray) -> String? = { _, _ -> null }
 ) : RepositorioAlarma {
     // Historial reactivo: la UI se actualiza sola cuando cambia Room
     override val alertas: Flow<List<Alerta>> = alertaDao.observarTodas()
@@ -65,11 +73,28 @@ class AlarmaRepository(
     private suspend fun enviar(local: Alerta): EstadoEnvio =
         when (val r = llamar { alertasApi.crear(local.aRequest()) }) {
             is ResultadoRemoto.Exito -> {
-                alertaDao.actualizar(local.copy(remoteId = r.datos.id, estado = r.datos.estado, sincronizada = true))
+                val enviada = local.copy(remoteId = r.datos.id, estado = r.datos.estado, sincronizada = true)
+                alertaDao.actualizar(enviada)
+                subirFoto(enviada)
                 EstadoEnvio.SINCRONIZADA
             }
             else -> EstadoEnvio.SOLO_LOCAL
         }
+
+    // PUT de la foto de una alerta ya enviada. Si falla no pasa nada: se reintenta al refrescar el historial.
+    private suspend fun subirFoto(alerta: Alerta) {
+        val uri = alerta.fotoUri ?: return
+        val remoteId = alerta.remoteId ?: return
+        val bytes = leerFoto(uri) ?: return
+        llamar { alertasApi.subirFoto(remoteId, bytes.toRequestBody("image/jpeg".toMediaType())) }
+    }
+
+    // GET de la foto de una alerta que el telefono todavia no tiene; devuelve la direccion local guardada
+    private suspend fun descargarFoto(remoteId: Long): String? {
+        val r = llamar { alertasApi.bajarFoto(remoteId) }
+        if (r !is ResultadoRemoto.Exito) return null
+        return guardarFotoDescargada(remoteId, r.datos.bytes())
+    }
 
     // Envia las alertas creadas sin conexion. Se detiene al primer fallo de red. Devuelve cuantas subio.
     suspend fun sincronizarPendientes(): Int {
@@ -98,10 +123,20 @@ class AlarmaRepository(
     private suspend fun guardarRemota(remota: AlertaRemota) {
         val existente = alertaDao.buscarPorRemoteId(remota.id)
         if (existente == null) {
-            alertaDao.insertar(remota.aLocal())
+            val id = alertaDao.insertar(remota.aLocal()).toInt()
+            // Alerta nueva para este telefono: si el servidor tiene su foto, se descarga
+            if (remota.tieneFoto) {
+                descargarFoto(remota.id)?.let { alertaDao.actualizar(remota.aLocal().copy(id = id, fotoUri = it)) }
+            }
         } else {
-            // La foto solo existe en el telefono, por eso se conserva la local
-            alertaDao.actualizar(remota.aLocal().copy(id = existente.id, fotoUri = existente.fotoUri))
+            // Se conserva la foto local; si el servidor no la tiene, se vuelve a subir
+            val actual = remota.aLocal().copy(id = existente.id, fotoUri = existente.fotoUri)
+            alertaDao.actualizar(actual)
+            if (existente.fotoUri != null && !remota.tieneFoto) {
+                subirFoto(actual)
+            } else if (existente.fotoUri == null && remota.tieneFoto) {
+                descargarFoto(remota.id)?.let { alertaDao.actualizar(actual.copy(fotoUri = it)) }
+            }
         }
     }
 
@@ -246,7 +281,11 @@ class AlarmaRepository(
                 usuarioDao = db.usuarioDao(),
                 alertasApi = RetrofitClient.alertasApi,
                 usuariosApi = RetrofitClient.usuariosApi,
-                climaApi = RetrofitClient.climaApi
+                climaApi = RetrofitClient.climaApi,
+                leerFoto = { uri -> withContext(Dispatchers.IO) { ManejadorFoto.leerYReducir(context, uri) } },
+                guardarFotoDescargada = { id, bytes ->
+                    withContext(Dispatchers.IO) { ManejadorFoto.guardarDescargada(context, id, bytes) }
+                }
             )
         }
     }

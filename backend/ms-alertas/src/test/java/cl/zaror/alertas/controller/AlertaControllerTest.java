@@ -90,4 +90,42 @@ class AlertaControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensaje").value("No existe la alerta 9"));
     }
+
+    @Test
+    void subirFoto_responde204() throws Exception {
+        mvc.perform(put("/api/alertas/1/foto")
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .content(new byte[]{1, 2, 3}))
+                .andExpect(status().isNoContent());
+
+        verify(service).guardarFoto(eq(1L), any(byte[].class), org.mockito.ArgumentMatchers.startsWith("image/jpeg"));
+    }
+
+    @Test
+    void subirFoto_invalida_responde400() throws Exception {
+        doThrow(new cl.zaror.alertas.exception.FotoInvalidaException("La foto esta vacia"))
+                .when(service).guardarFoto(eq(1L), any(byte[].class), any());
+
+        mvc.perform(put("/api/alertas/1/foto").contentType(MediaType.IMAGE_JPEG).content(new byte[]{1}))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").value("La foto esta vacia"));
+    }
+
+    @Test
+    void bajarFoto_devuelveLosBytesYElTipo() throws Exception {
+        when(service.obtenerFoto(1L)).thenReturn(
+                new cl.zaror.alertas.model.FotoAlerta(1L, "image/jpeg", new byte[]{9, 8, 7}));
+
+        mvc.perform(get("/api/alertas/1/foto"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType(MediaType.IMAGE_JPEG))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(new byte[]{9, 8, 7}));
+    }
+
+    @Test
+    void bajarFoto_sinFoto_responde404() throws Exception {
+        when(service.obtenerFoto(2L)).thenThrow(new RecursoNoEncontradoException("La alerta 2 no tiene foto"));
+
+        mvc.perform(get("/api/alertas/2/foto")).andExpect(status().isNotFound());
+    }
 }

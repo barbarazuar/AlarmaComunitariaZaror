@@ -2,10 +2,13 @@ package cl.zaror.alertas.service;
 
 import cl.zaror.alertas.dto.AlertaRequest;
 import cl.zaror.alertas.dto.AlertaResponse;
+import cl.zaror.alertas.exception.FotoInvalidaException;
 import cl.zaror.alertas.exception.RecursoNoEncontradoException;
 import cl.zaror.alertas.model.Alerta;
 import cl.zaror.alertas.model.EstadoAlerta;
+import cl.zaror.alertas.model.FotoAlerta;
 import cl.zaror.alertas.repository.AlertaRepository;
+import cl.zaror.alertas.repository.FotoAlertaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,11 +30,14 @@ class AlertaServiceTest {
     @Mock
     AlertaRepository repo;
 
+    @Mock
+    FotoAlertaRepository fotos;
+
     AlertaService service;
 
     @BeforeEach
     void preparar() {
-        service = new AlertaService(repo, () -> 1000L);
+        service = new AlertaService(repo, fotos, () -> 1000L);
     }
 
     private AlertaRequest request(Long fecha) {
@@ -130,5 +136,61 @@ class AlertaServiceTest {
         when(repo.existsById(99L)).thenReturn(false);
         assertThrows(RecursoNoEncontradoException.class, () -> service.eliminar(99L));
         verify(repo, never()).deleteById(any());
+    }
+
+    // ---------- Foto de la alerta
+
+    @Test
+    void guardarFoto_guardaLosBytesYElTipo() {
+        Alerta a = new Alerta(); a.setId(5L);
+        when(repo.findById(5L)).thenReturn(Optional.of(a));
+
+        service.guardarFoto(5L, new byte[]{1, 2, 3}, "image/jpeg");
+
+        verify(fotos).save(any(FotoAlerta.class));
+    }
+
+    @Test
+    void guardarFoto_rechazaLoQueNoEsImagen() {
+        Alerta a = new Alerta(); a.setId(5L);
+        when(repo.findById(5L)).thenReturn(Optional.of(a));
+
+        assertThrows(FotoInvalidaException.class, () -> service.guardarFoto(5L, new byte[]{1}, "text/plain"));
+        assertThrows(FotoInvalidaException.class, () -> service.guardarFoto(5L, new byte[0], "image/jpeg"));
+        assertThrows(FotoInvalidaException.class,
+                () -> service.guardarFoto(5L, new byte[AlertaService.MAX_BYTES_FOTO + 1], "image/jpeg"));
+        verify(fotos, never()).save(any());
+    }
+
+    @Test
+    void guardarFoto_alertaInexistente_lanza404() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.guardarFoto(99L, new byte[]{1}, "image/jpeg"));
+    }
+
+    @Test
+    void obtenerFoto_sinFoto_lanza404() {
+        when(fotos.findById(7L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.obtenerFoto(7L));
+    }
+
+    @Test
+    void buscarPorId_indicaSiTieneFoto() {
+        Alerta a = new Alerta(); a.setId(8L);
+        when(repo.findById(8L)).thenReturn(Optional.of(a));
+        when(fotos.existsById(8L)).thenReturn(true);
+
+        assertTrue(service.buscarPorId(8L).tieneFoto());
+    }
+
+    @Test
+    void eliminar_tambienBorraLaFoto() {
+        when(repo.existsById(3L)).thenReturn(true);
+
+        service.eliminar(3L);
+
+        verify(fotos).deleteById(3L);
     }
 }
