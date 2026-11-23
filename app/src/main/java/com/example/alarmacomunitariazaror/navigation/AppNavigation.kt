@@ -30,8 +30,8 @@ import com.example.alarmacomunitariazaror.viewmodel.AuthViewModel
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
-    val alarmaViewModel: AlarmaViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+    val alarmaViewModel: AlarmaViewModel = viewModel(factory = AlarmaViewModel.Factory)
 
     NavHost(
         navController = navController,

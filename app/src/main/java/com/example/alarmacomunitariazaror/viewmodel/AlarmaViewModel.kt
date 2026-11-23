@@ -1,11 +1,14 @@
 package com.example.alarmacomunitariazaror.viewmodel
 
-import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
 import com.example.alarmacomunitariazaror.data.remote.ResultadoRemoto
 import com.example.alarmacomunitariazaror.data.repository.AlarmaRepository
+import com.example.alarmacomunitariazaror.data.repository.RepositorioAlarma
 import com.example.alarmacomunitariazaror.data.repository.EstadoEnvio
 import com.example.alarmacomunitariazaror.model.Alerta
 import com.example.alarmacomunitariazaror.model.AlertaErrores
@@ -25,9 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AlarmaViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repo = AlarmaRepository.crear(application)
+class AlarmaViewModel(private val repo: RepositorioAlarma) : ViewModel() {
 
     // Historial: convierte el Flow de Room en StateFlow para que Compose lo observe.
     // WhileSubscribed(5000): deja de escuchar 5 s después de que ninguna pantalla lo usa.
@@ -199,6 +200,9 @@ class AlarmaViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     companion object {
+        val Factory = viewModelFactory {
+            initializer { AlarmaViewModel(AlarmaRepository.crear(checkNotNull(this[APPLICATION_KEY]))) }
+        }
         // Sector Población Zaror, Cerrillos (aproximado)
         const val SECTOR_LATITUD = -33.498
         const val SECTOR_LONGITUD = -70.717

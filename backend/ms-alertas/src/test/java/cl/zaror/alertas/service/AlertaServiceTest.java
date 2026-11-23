@@ -98,4 +98,37 @@ class AlertaServiceTest {
 
         verify(repo).deleteById(3L);
     }
+
+    @Test void listar_sinFiltro_yPorUsuario() {
+        when(repo.findAllByOrderByFechaHoraDesc()).thenReturn(List.of(new Alerta()));
+        when(repo.findByUsuarioIdOrderByFechaHoraDesc(7L)).thenReturn(List.of(new Alerta()));
+        assertEquals(1, service.listar(null, null).size());
+        assertEquals(1, service.listar(null, 7L).size());
+        verify(repo).findByUsuarioIdOrderByFechaHoraDesc(7L);
+    }
+
+    @Test void buscarPorId_existente_yAusente() {
+        Alerta a = new Alerta(); a.setId(8L);
+        when(repo.findById(8L)).thenReturn(Optional.of(a));
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+        assertEquals(8L, service.buscarPorId(8L).id());
+        assertThrows(RecursoNoEncontradoException.class, () -> service.buscarPorId(99L));
+    }
+
+    @Test void actualizar_reemplazaDatos_yConservaFechaSiNoViene() {
+        Alerta a = new Alerta(); a.setId(8L); a.setFechaHora(123L); a.setEstado(EstadoAlerta.ATENDIDA);
+        when(repo.findById(8L)).thenReturn(Optional.of(a));
+        when(repo.save(a)).thenReturn(a);
+        AlertaResponse sinFecha = service.actualizar(8L, new AlertaRequest(" Ana ", 7L, " Calle 123 ", null, " Incendio ", null));
+        assertEquals(123L, sinFecha.fechaHora()); assertEquals("", sinFecha.descripcion());
+        assertEquals("Calle 123", sinFecha.ubicacion()); assertEquals(7L, sinFecha.usuarioId());
+        assertEquals(EstadoAlerta.ATENDIDA, sinFecha.estado());
+        assertEquals(555L, service.actualizar(8L, request(555L)).fechaHora());
+    }
+
+    @Test void eliminar_ausente_noBorra() {
+        when(repo.existsById(99L)).thenReturn(false);
+        assertThrows(RecursoNoEncontradoException.class, () -> service.eliminar(99L));
+        verify(repo, never()).deleteById(any());
+    }
 }
