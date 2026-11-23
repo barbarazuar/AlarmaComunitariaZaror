@@ -40,8 +40,9 @@ Los archivos privados son:
 
 También se admiten `ZAROR_STORE_FILE`, `ZAROR_STORE_PASSWORD`, `ZAROR_KEY_ALIAS`
 y `ZAROR_KEY_PASSWORD` como variables de entorno. No registrar sus valores en
-terminales compartidos ni capturas. `validarFirmaRelease` impide generar una
-entrega sin los cuatro datos y el almacén existente.
+terminales compartidos ni capturas. Sin llave configurada, la release se firma con la llave de depuración para
+que cualquiera pueda compilarla; la entrega oficial exige la llave privada, y
+`validarFirmaRelease` falla si faltan los cuatro datos o el almacén.
 
 `.private/`, `dist/`, las JKS y otros almacenes de claves están excluidos de Git.
 Conservar una copia privada de respaldo de la llave y sus credenciales: las
