@@ -1,5 +1,7 @@
 package com.example.alarmacomunitariazaror.data.remote
 
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -35,6 +37,13 @@ interface AlertasApi {
 
     @DELETE("api/alertas/{id}")
     suspend fun eliminar(@Path("id") id: Long): Response<Unit>
+
+    // La foto viaja como bytes de imagen (Content-Type image/jpeg), no como JSON
+    @PUT("api/alertas/{id}/foto")
+    suspend fun subirFoto(@Path("id") id: Long, @Body foto: RequestBody): Response<Unit>
+
+    @GET("api/alertas/{id}/foto")
+    suspend fun bajarFoto(@Path("id") id: Long): Response<ResponseBody>
 }
 
 interface UsuariosApi {

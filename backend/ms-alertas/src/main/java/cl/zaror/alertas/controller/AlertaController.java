@@ -4,9 +4,12 @@ import cl.zaror.alertas.dto.AlertaRequest;
 import cl.zaror.alertas.dto.AlertaResponse;
 import cl.zaror.alertas.dto.EstadoRequest;
 import cl.zaror.alertas.model.EstadoAlerta;
+import cl.zaror.alertas.model.FotoAlerta;
 import cl.zaror.alertas.service.AlertaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,6 +52,24 @@ public class AlertaController {
     @PatchMapping("/{id}/estado")
     public AlertaResponse cambiarEstado(@PathVariable Long id, @Valid @RequestBody EstadoRequest req) {
         return service.cambiarEstado(id, req.estado());
+    }
+
+    // PUT /api/alertas/{id}/foto: el cuerpo son los bytes de la imagen y Content-Type indica el formato
+    @PutMapping("/{id}/foto")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void subirFoto(@PathVariable Long id,
+                          @RequestBody byte[] datos,
+                          @RequestHeader(value = "Content-Type", required = false) String contentType) {
+        service.guardarFoto(id, datos, contentType);
+    }
+
+    // GET /api/alertas/{id}/foto: devuelve la imagen tal como se subio (404 si no tiene)
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> bajarFoto(@PathVariable Long id) {
+        FotoAlerta foto = service.obtenerFoto(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(foto.getContentType()))
+                .body(foto.getDatos());
     }
 
     @DeleteMapping("/{id}")

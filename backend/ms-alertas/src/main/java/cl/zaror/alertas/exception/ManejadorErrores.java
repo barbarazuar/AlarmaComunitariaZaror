@@ -19,6 +19,12 @@ public class ManejadorErrores {
         return responder(HttpStatus.NOT_FOUND, e.getMessage(), Map.of());
     }
 
+    // Foto vacia, muy grande o que no es una imagen
+    @ExceptionHandler(FotoInvalidaException.class)
+    public ResponseEntity<ErrorResponse> fotoInvalida(FotoInvalidaException e) {
+        return responder(HttpStatus.BAD_REQUEST, e.getMessage(), Map.of());
+    }
+
     // Errores de @Valid: devuelve campo -> mensaje
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> validacion(MethodArgumentNotValidException e) {

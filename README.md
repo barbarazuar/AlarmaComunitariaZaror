@@ -135,11 +135,11 @@ Pantallas Compose -> ViewModel -> RepositorioAlarma
 
 - El historial siempre se lee de Room. Crear una alerta primero guarda localmente y luego intenta POST al servidor.
 - Sin respuesta correcta del POST, queda pendiente con `remoteId = null`; se reintenta al abrir o refrescar el historial.
-- Después de enviar pendientes se descarga la lista remota y se conserva la foto local de registros existentes.
+- Después de enviar pendientes se descarga la lista remota y se conserva la foto local de registros existentes. Si el servidor tiene la foto de una alerta que el teléfono no tiene, la descarga.
 - Cambiar estado, editar o eliminar registros ya enviados requiere respuesta remota correcta. DELETE 404 permite limpiar una copia que el servidor ya no tiene.
 - Registro y login usan ms-usuarios. Ante falta de conexión se usa el respaldo local; un error HTTP de credenciales no se convierte en login offline.
 - Una cuenta creada offline no se registra automáticamente después en el servidor.
-- Las fotos solo existen en el teléfono; no se suben al backend.
+- La foto de una alerta se guarda en el teléfono y, cuando la alerta ya está en el servidor, se sube con `PUT /api/alertas/{id}/foto` (JPEG reducido a 1280 px). Si la subida falla, se reintenta al refrescar el historial. Otro teléfono la descarga con `GET /api/alertas/{id}/foto`. El servidor guarda la imagen en su base H2 (máximo 2 MB) y la elimina junto con la alerta.
 - No hay JWT, autorización por propietario, idempotencia ni sincronización periódica con WorkManager. La lista remota actual es compartida.
 - HTTP sin cifrar está permitido para los servicios de desarrollo. El backend de demostración usa H2 sin contraseña y consola habilitada. No es una configuración para publicar en internet.
 
@@ -148,7 +148,7 @@ Pantallas Compose -> ViewModel -> RepositorioAlarma
 | Servicio | Operaciones |
 |---|---|
 | Usuarios | POST `/api/usuarios/registro`, POST `/api/usuarios/login`, GET lista e individual, PUT y DELETE por id |
-| Alertas | GET lista e individual, POST, PUT y DELETE por id, PATCH `/api/alertas/{id}/estado` |
+| Alertas | GET lista e individual, POST, PUT y DELETE por id, PATCH `/api/alertas/{id}/estado`, PUT y GET `/api/alertas/{id}/foto` |
 | Externo | GET `https://api.open-meteo.com/v1/forecast` con latitude, longitude y current |
 
 El contrato completo y códigos de respuesta están en [backend/README.md](backend/README.md).
@@ -165,8 +165,8 @@ El contrato completo y códigos de respuesta están en [backend/README.md](backe
 
 | Módulo | Pruebas correctas | Cobertura de líneas de lógica |
 |---|---:|---:|
-| Android | 94 | 99,76 % |
-| ms-alertas | 17 | 94,74 % |
+| Android | 100 | 99,54 % |
+| ms-alertas | 27 | 96,15 % |
 | ms-usuarios | 13 | 100 % |
 
 Los tres módulos superan el umbral del 80 %. El alcance, las exclusiones y las rutas de reportes están en [docs/PRUEBAS.md](docs/PRUEBAS.md). Los porcentajes no incluyen toda la UI ni reemplazan la prueba en un dispositivo.

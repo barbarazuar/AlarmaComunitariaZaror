@@ -91,7 +91,9 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 | POST | `/api/alertas` | `AlertaRequest` | 201 / 400 |
 | PUT | `/api/alertas/{id}` | `AlertaRequest` | 200 / 400 / 404 |
 | PATCH | `/api/alertas/{id}/estado` | `{ "estado": "ATENDIDA" }` | 200 / 400 / 404 |
-| DELETE | `/api/alertas/{id}` | | 204 / 404 |
+| DELETE | `/api/alertas/{id}` | | 204 / 404 (borra también la foto) |
+| PUT | `/api/alertas/{id}/foto` | bytes de la imagen, `Content-Type: image/jpeg` o `image/png` | 204 / 400 si está vacía, pesa más de 2 MB o no es imagen / 404 |
+| GET | `/api/alertas/{id}/foto` | | 200 con la imagen / 404 si la alerta no tiene foto |
 
 ```json
 // POST /api/alertas  (fechaHora y usuarioId son opcionales)
@@ -108,7 +110,8 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 {
   "id": 3, "vecinoNombre": "Ana Demo", "usuarioId": 1,
   "ubicacion": "Lat -33.495, Lon -70.715", "fechaHora": 1795445770083,
-  "tipoEmergencia": "Incendio", "descripcion": "Humo en el pasaje", "estado": "ACTIVA"
+  "tipoEmergencia": "Incendio", "descripcion": "Humo en el pasaje", "estado": "ACTIVA",
+  "tieneFoto": false
 }
 ```
 
@@ -130,7 +133,7 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 .\gradlew.bat test
 ```
 
-30 pruebas entre ambos microservicios. Ver [pruebas y cobertura](../docs/PRUEBAS.md) para los resultados y el alcance medido. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
+40 pruebas entre ambos microservicios. Ver [pruebas y cobertura](../docs/PRUEBAS.md) para los resultados y el alcance medido. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
 
 | Clase | Tipo | Qué se mockea |
 |---|---|---|
