@@ -13,3 +13,11 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Firma y artefactos privados de entrega
+/.private/
+/dist/
+*.jks
+*.keystore
+*.p12
+keystore.properties

@@ -49,15 +49,15 @@ class AlarmaRepository(
     private val usuariosApi: UsuariosApi,
     private val climaApi: ClimaApi,
     private val urlClima: String = RetrofitClient.URL_CLIMA
-) {
+) : RepositorioAlarma {
     // Historial reactivo: la UI se actualiza sola cuando cambia Room
-    val alertas: Flow<List<Alerta>> = alertaDao.observarTodas()
+    override val alertas: Flow<List<Alerta>> = alertaDao.observarTodas()
 
     // ---------------------------------------------------------------- Alertas
 
     // Guarda en Room y trata de enviar al microservicio. Si Room falla, lanza la excepcion.
     // El usuarioRemotoId viaja dentro de la alerta, asi tambien se envia al reintentar.
-    suspend fun guardarAlerta(alerta: Alerta): EstadoEnvio {
+    override suspend fun guardarAlerta(alerta: Alerta): EstadoEnvio {
         val id = alertaDao.insertar(alerta.copy(sincronizada = false, remoteId = null)).toInt()
         return enviar(alerta.copy(id = id))
     }
@@ -82,7 +82,7 @@ class AlarmaRepository(
 
     // Sube lo pendiente y despues descarga el estado del servidor a Room.
     // Devuelve cuantas alertas hay en el servidor, o el motivo del fallo.
-    suspend fun refrescarAlertas(): ResultadoRemoto<Int> {
+    override suspend fun refrescarAlertas(): ResultadoRemoto<Int> {
         sincronizarPendientes()
         return when (val r = llamar { alertasApi.listar() }) {
             is ResultadoRemoto.Exito -> {
@@ -105,7 +105,7 @@ class AlarmaRepository(
         }
     }
 
-    suspend fun cambiarEstado(alerta: Alerta, nuevoEstado: String): ResultadoRemoto<Unit> {
+    override suspend fun cambiarEstado(alerta: Alerta, nuevoEstado: String): ResultadoRemoto<Unit> {
         val remoteId = alerta.remoteId
         if (remoteId == null) {
             alertaDao.actualizar(alerta.copy(estado = nuevoEstado))
@@ -122,7 +122,7 @@ class AlarmaRepository(
     }
 
     // PUT: reemplaza los datos de la alerta en el servidor y en Room
-    suspend fun editarAlerta(alerta: Alerta): ResultadoRemoto<Unit> {
+    override suspend fun editarAlerta(alerta: Alerta): ResultadoRemoto<Unit> {
         val remoteId = alerta.remoteId
         if (remoteId == null) {
             alertaDao.actualizar(alerta)
@@ -138,7 +138,7 @@ class AlarmaRepository(
         }
     }
 
-    suspend fun eliminarAlerta(alerta: Alerta): ResultadoRemoto<Unit> {
+    override suspend fun eliminarAlerta(alerta: Alerta): ResultadoRemoto<Unit> {
         val remoteId = alerta.remoteId
         if (remoteId != null) {
             val r = llamar { alertasApi.eliminar(remoteId) }
@@ -158,7 +158,7 @@ class AlarmaRepository(
 
     // ---------------------------------------------------------------- Usuarios
 
-    suspend fun registrarUsuario(nombre: String, correo: String, clave: String, direccion: String): ResultadoAuth {
+    override suspend fun registrarUsuario(nombre: String, correo: String, clave: String, direccion: String): ResultadoAuth {
         val correoNormal = correo.trim().lowercase()
         val datos = RegistroRequestRemoto(nombre.trim(), correoNormal, clave, direccion.trim())
         return when (val r = llamar { usuariosApi.registrar(datos) }) {
@@ -181,7 +181,7 @@ class AlarmaRepository(
         }
     }
 
-    suspend fun iniciarSesion(correo: String, clave: String): ResultadoAuth {
+    override suspend fun iniciarSesion(correo: String, clave: String): ResultadoAuth {
         val correoNormal = correo.trim().lowercase()
         return when (val r = llamar { usuariosApi.login(LoginRequestRemoto(correoNormal, clave)) }) {
             is ResultadoRemoto.Exito -> ResultadoAuth.Exito(guardarCuenta(r.datos, clave), enLinea = true)
@@ -214,7 +214,7 @@ class AlarmaRepository(
     }
 
     // Los vecinos del sector son las cuentas registradas en ms-usuarios
-    suspend fun obtenerVecinos(): ResultadoRemoto<List<Vecino>> =
+    override suspend fun obtenerVecinos(): ResultadoRemoto<List<Vecino>> =
         when (val r = llamar { usuariosApi.listar() }) {
             is ResultadoRemoto.Exito ->
                 ResultadoRemoto.Exito(r.datos.map { Vecino(it.nombre, it.direccion, "Vecino") })
@@ -224,7 +224,7 @@ class AlarmaRepository(
 
     // ---------------------------------------------------------------- API externa
 
-    suspend fun obtenerClima(latitud: Double, longitud: Double): ResultadoRemoto<Clima> =
+    override suspend fun obtenerClima(latitud: Double, longitud: Double): ResultadoRemoto<Clima> =
         when (val r = llamar { climaApi.climaActual(urlClima, latitud, longitud) }) {
             is ResultadoRemoto.Exito -> {
                 val actual = r.datos.current

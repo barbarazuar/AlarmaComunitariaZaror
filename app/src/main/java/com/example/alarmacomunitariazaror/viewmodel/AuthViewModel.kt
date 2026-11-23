@@ -1,9 +1,12 @@
 package com.example.alarmacomunitariazaror.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
 import com.example.alarmacomunitariazaror.data.repository.AlarmaRepository
+import com.example.alarmacomunitariazaror.data.repository.RepositorioAlarma
 import com.example.alarmacomunitariazaror.data.repository.ResultadoAuth
 import com.example.alarmacomunitariazaror.model.LoginUiState
 import com.example.alarmacomunitariazaror.model.RegistroErrores
@@ -16,10 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// AndroidViewModel = ViewModel que recibe la Application (necesaria para abrir Room)
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val repo = AlarmaRepository.crear(application)
+// El repositorio se recibe por constructor; la fábrica lo conecta con Android.
+class AuthViewModel(private val repo: RepositorioAlarma) : ViewModel() {
 
     // Patrón _privado / público: solo el ViewModel modifica; la UI solo lee.
     private val _registro = MutableStateFlow(RegistroUiState())
@@ -108,5 +109,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun cerrarSesion() {
         _usuario.value = null
         _login.value = LoginUiState()
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer { AuthViewModel(AlarmaRepository.crear(checkNotNull(this[APPLICATION_KEY]))) }
+        }
     }
 }

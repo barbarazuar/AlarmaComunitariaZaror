@@ -1,6 +1,7 @@
 package cl.zaror.usuarios.service;
 
 import cl.zaror.usuarios.dto.LoginRequest;
+import cl.zaror.usuarios.dto.ActualizarUsuarioRequest;
 import cl.zaror.usuarios.dto.RegistroRequest;
 import cl.zaror.usuarios.dto.UsuarioResponse;
 import cl.zaror.usuarios.exception.CorreoDuplicadoException;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -102,5 +104,34 @@ class UsuarioServiceTest {
 
         assertThrows(RecursoNoEncontradoException.class, () -> service.eliminar(99L));
         verify(repo, never()).deleteById(any());
+    }
+
+    @Test void listar_yBuscar_devuelvenDatosPublicos() {
+        Usuario u = new Usuario("Ana", "ana@demo.cl", "HASH", "Calle 123"); u.setId(7L);
+        when(repo.findAll()).thenReturn(List.of(u));
+        when(repo.findById(7L)).thenReturn(Optional.of(u));
+        assertEquals(1, service.listar().size());
+        assertEquals("ana@demo.cl", service.buscarPorId(7L).correo());
+        assertEquals(7L, service.buscarPorId(7L).id());
+    }
+
+    @Test void buscarYActualizar_inexistentes_noGuardan() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(RecursoNoEncontradoException.class, () -> service.buscarPorId(99L));
+        assertThrows(RecursoNoEncontradoException.class, () -> service.actualizar(99L, new ActualizarUsuarioRequest("Ana", "Calle 123")));
+        verify(repo, never()).save(any());
+    }
+
+    @Test void actualizar_limpiaCampos_yConservaCorreoYHash() {
+        Usuario u = new Usuario("Ana", "ana@demo.cl", "HASH", "Calle 123"); u.setId(7L);
+        when(repo.findById(7L)).thenReturn(Optional.of(u)); when(repo.save(u)).thenReturn(u);
+        UsuarioResponse r = service.actualizar(7L, new ActualizarUsuarioRequest(" Ana Perez ", " Calle 456 "));
+        assertEquals("Ana Perez", r.nombre()); assertEquals("Calle 456", r.direccion());
+        assertEquals("ana@demo.cl", r.correo()); assertEquals("HASH", u.getClaveHash());
+    }
+
+    @Test void eliminar_existente_borraSoloEseId() {
+        when(repo.existsById(7L)).thenReturn(true);
+        service.eliminar(7L); verify(repo).deleteById(7L);
     }
 }

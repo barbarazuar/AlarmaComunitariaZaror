@@ -4,6 +4,8 @@
 
     <!-- Conexion con los microservicios y la API externa -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 17+ exige permiso en tiempo de ejecución para los servicios de la LAN. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <!-- Ubicacion aproximada para asociar la alerta a un punto del sector -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

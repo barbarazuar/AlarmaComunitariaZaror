@@ -33,6 +33,7 @@ import com.example.alarmacomunitariazaror.util.comoFechaLegible
 fun AlertaCard(
     alerta: Alerta,
     onAtender: (() -> Unit)? = null,    // marcar como atendida (PATCH)
+    onEditar: (() -> Unit)? = null,     // editar la descripcion (PUT)
     onEliminar: (() -> Unit)? = null    // eliminar (DELETE)
 ) {
     Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
@@ -53,10 +54,13 @@ fun AlertaCard(
                     if (alerta.sincronizada) "enviada al servidor" else "pendiente de envío",
                 style = MaterialTheme.typography.labelMedium
             )
-            if (onAtender != null || onEliminar != null) {
+            if (onAtender != null || onEditar != null || onEliminar != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (onAtender != null && alerta.estado != Alerta.ESTADO_ATENDIDA) {
                         TextButton(onClick = onAtender) { Text("Marcar atendida") }
+                    }
+                    if (onEditar != null) {
+                        TextButton(onClick = onEditar) { Text("Editar") }
                     }
                     if (onEliminar != null) {
                         TextButton(onClick = onEliminar) { Text("Eliminar") }
