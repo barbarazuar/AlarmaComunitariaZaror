@@ -22,6 +22,15 @@ class ScreenTest {
     }
 
     @Test
+    fun `las rutas coinciden con los destinos esperados`() {
+        assertEquals("login", Screen.Login.route)
+        assertEquals("registro", Screen.Registro.route)
+        assertEquals("panel", Screen.Panel.route)
+        assertEquals("historial", Screen.Historial.route)
+        assertEquals("vecinos", Screen.Vecinos.route)
+    }
+
+    @Test
     fun `todas las pantallas tienen titulo visible`() {
         assertTrue(screens.all { it.titulo.isNotBlank() })
     }
