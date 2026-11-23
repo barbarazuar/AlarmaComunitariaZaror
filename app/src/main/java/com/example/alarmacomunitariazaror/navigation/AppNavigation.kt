@@ -67,8 +67,16 @@ fun AppNavigation() {
             PanelRoute(
                 authViewModel = authViewModel,
                 alarmaViewModel = alarmaViewModel,
-                onIrAHistorial = { navController.navigate(Screen.Historial.route) },
-                onIrAVecinos = { navController.navigate(Screen.Vecinos.route) },
+                onIrAHistorial = {
+                    navController.navigate(Screen.Historial.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onIrAVecinos = {
+                    navController.navigate(Screen.Vecinos.route) {
+                        launchSingleTop = true
+                    }
+                },
                 onCerrarSesion = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(navController.graph.id) { inclusive = true }

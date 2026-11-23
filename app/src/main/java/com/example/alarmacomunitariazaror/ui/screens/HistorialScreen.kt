@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.alarmacomunitariazaror.model.Alerta
 import com.example.alarmacomunitariazaror.ui.components.AlertaCard
+import com.example.alarmacomunitariazaror.util.ValidadorFormulario
 
 // Recibe la lista y los callbacks para editar y eliminar alertas
 @Composable
@@ -55,6 +56,8 @@ fun HistorialScreen(
     var alertaAEliminar by remember { mutableStateOf<Alerta?>(null) }
     var mensajeFeedback by remember { mutableStateOf<String?>(null) }
 
+    val errorEdicion = ValidadorFormulario.descripcionEdicion(textoEdicion)
+
     // Diálogo para editar descripción de la alerta
     alertaAEditar?.let { alerta ->
         AlertDialog(
@@ -67,6 +70,12 @@ fun HistorialScreen(
                         value = textoEdicion,
                         onValueChange = { textoEdicion = it },
                         label = { Text("Descripción") },
+                        isError = errorEdicion != null,
+                        supportingText = {
+                            if (errorEdicion != null) {
+                                Text(errorEdicion, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = false,
                         maxLines = 4
@@ -76,12 +85,13 @@ fun HistorialScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (textoEdicion.isNotBlank()) {
+                        if (errorEdicion == null) {
                             onActualizarAlerta(alerta, textoEdicion)
                             alertaAEditar = null
                             mensajeFeedback = "Alerta modificada con éxito"
                         }
-                    }
+                    },
+                    enabled = errorEdicion == null
                 ) { Text("Guardar cambios") }
             },
             dismissButton = {
