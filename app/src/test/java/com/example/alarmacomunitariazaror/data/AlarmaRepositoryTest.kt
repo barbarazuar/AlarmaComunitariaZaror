@@ -408,4 +408,52 @@ class AlarmaRepositoryTest {
     fun `obtener clima sin conexion devuelve SinConexion`() = runTest {
         assertTrue(crearRepoSinServidor().obtenerClima(-33.0, -70.0) is ResultadoRemoto.SinConexion)
     }
+
+    @Test fun `editar y eliminar pendientes no necesitan servidor`() = runTest {
+        alertaDao.insertar(alertaLocal())
+        val editada = alertaDao.datos.single().copy(descripcion = "Detalle nuevo")
+        assertTrue(repo.editarAlerta(editada) is ResultadoRemoto.Exito)
+        assertEquals("Detalle nuevo", alertaDao.datos.single().descripcion)
+        assertTrue(repo.eliminarAlerta(editada) is ResultadoRemoto.Exito)
+        assertTrue(alertaDao.datos.isEmpty()); assertEquals(0, servidor.requestCount)
+    }
+
+    @Test fun `editar con error HTTP o sin conexion conserva los datos anteriores`() = runTest {
+        alertaDao.insertar(alertaLocal(remoteId = 4))
+        val anterior = alertaDao.datos.single()
+        servidor.enqueue(json(500, """{"mensaje":"Fallo demo"}"""))
+        assertTrue(repo.editarAlerta(anterior.copy(descripcion = "Nuevo")) is ResultadoRemoto.ErrorHttp)
+        assertEquals(anterior, alertaDao.datos.single())
+        assertTrue(crearRepoSinServidor().editarAlerta(anterior) is ResultadoRemoto.SinConexion)
+        assertEquals(anterior, alertaDao.datos.single())
+    }
+
+    @Test fun `cambio de estado rechazado no modifica Room`() = runTest {
+        alertaDao.insertar(alertaLocal(remoteId = 4))
+        val anterior = alertaDao.datos.single()
+        servidor.enqueue(json(400, """{"mensaje":"Estado invalido"}"""))
+        assertTrue(repo.cambiarEstado(anterior, "OTRO") is ResultadoRemoto.ErrorHttp)
+        assertEquals(anterior, alertaDao.datos.single())
+    }
+
+    @Test fun `refresco con error HTTP no borra el historial local`() = runTest {
+        alertaDao.insertar(alertaLocal(remoteId = 4))
+        servidor.enqueue(json(500, """{"mensaje":"Fallo demo"}"""))
+        assertTrue(repo.refrescarAlertas() is ResultadoRemoto.ErrorHttp)
+        assertEquals(1, alertaDao.datos.size)
+    }
+
+    @Test fun `vecinos devuelve error HTTP y falta de conexion`() = runTest {
+        servidor.enqueue(json(500, """{"mensaje":"Fallo demo"}"""))
+        assertTrue(repo.obtenerVecinos() is ResultadoRemoto.ErrorHttp)
+        assertTrue(crearRepoSinServidor().obtenerVecinos() is ResultadoRemoto.SinConexion)
+    }
+
+    @Test fun `login con fallo de servidor no acepta respaldo local como si fuera offline`() = runTest {
+        usuarioDao.insertar(Usuario(nombre="Ana", correo="ana@demo.cl", claveHash="secreta1".sha256(), direccion="Calle 123"))
+        servidor.enqueue(json(500, """{"mensaje":"Servicio no disponible"}"""))
+        val r = repo.iniciarSesion("ana@demo.cl", "secreta1")
+        assertTrue(r is ResultadoAuth.Error)
+        assertEquals("Servicio no disponible", (r as ResultadoAuth.Error).mensaje)
+    }
 }

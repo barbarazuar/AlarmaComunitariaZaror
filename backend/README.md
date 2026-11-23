@@ -130,7 +130,7 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 .\gradlew.bat test
 ```
 
-22 pruebas. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
+30 pruebas entre ambos microservicios. Ver [pruebas y cobertura](../docs/PRUEBAS.md) para los resultados y el alcance medido. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
 
 | Clase | Tipo | Qué se mockea |
 |---|---|---|
