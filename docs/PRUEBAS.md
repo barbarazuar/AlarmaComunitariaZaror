@@ -42,12 +42,12 @@ Sus resultados no se mezclan con el porcentaje Android.
 
 ## Evidencia de entrega
 
-Medición del 23 de noviembre de 2026 después de completar los casos:
+Medición del 23 de noviembre de 2026, después de agregar la foto de las alertas:
 
 | Módulo | Pruebas correctas | Líneas cubiertas de lógica | Cobertura |
 |---|---:|---:|---:|
-| Android | 94 | 414 de 415 | 99,76 % |
-| ms-alertas | 17 | 36 de 38 | 94,74 % |
+| Android | 100 | 433 de 435 | 99,54 % |
+| ms-alertas | 27 | 50 de 52 | 96,15 % |
 | ms-usuarios | 13 | 26 de 26 | 100 % |
 
 Android usa `FakeRepositorio` y un dispatcher de pruebas para los ViewModel;
@@ -56,7 +56,7 @@ validadores, fechas, hashes y códigos de clima. La fábrica Android se conserva
 en producción y recibe la Application mediante `CreationExtras`.
 El backend prueba servicios aislados con Mockito, endpoints con MockMvc y
 persistencia de alertas con H2 en memoria. Después de integrar la interfaz y los
-casos Kotest/MockK de `main`, son 124 pruebas entre los tres módulos, sin fallos ni
+casos Kotest/MockK de `main` y la foto de las alertas, son 140 pruebas entre los tres módulos, sin fallos ni
 casos omitidos. Esta cifra no incluye pruebas instrumentadas: `HistorialScreenTest`
 requiere ejecutar `:app:connectedDebugAndroidTest` en un dispositivo o emulador.
 Lint debug terminó sin errores; las advertencias preexistentes se conservan
