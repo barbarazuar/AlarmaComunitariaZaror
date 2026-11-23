@@ -1,4 +1,4 @@
-﻿# Alarma Comunitaria Zaror
+# Alarma Comunitaria Zaror
 
 Aplicación Android académica para registrar alertas vecinales de demostración, conservar un historial local y sincronizarlo con dos microservicios Spring Boot. Usa Kotlin, Jetpack Compose, Material 3, MVVM, Room, Retrofit y Open-Meteo.
 
@@ -70,7 +70,7 @@ También se puede abrir el proyecto raíz en Android Studio, seleccionar `app` y
 El host predeterminado **10.0.2.2** corresponde al PC visto desde el emulador Android estándar. En un teléfono por WiFi, reemplazar la IP de ejemplo por la del PC y recompilar:
 
 ```powershell
-.\gradlew.bat :app:assembleDebug -PbackendHost=192.168.1.20
+.\gradlew.bat :app:assembleDebug '-PbackendHost=192.168.1.20'
 ```
 
 `backendHost` se incorpora a `BuildConfig.BACKEND_HOST` y configura los dos clientes, en puertos 8081 y 8082. No contiene protocolo ni puerto. Revisar firewall y que la red permita comunicación entre dispositivos.
@@ -82,7 +82,7 @@ Como alternativa por USB, con depuración autorizada:
 ```powershell
 adb reverse tcp:8081 tcp:8081
 adb reverse tcp:8082 tcp:8082
-.\gradlew.bat :app:assembleRelease -PbackendHost=127.0.0.1 --no-configuration-cache
+.\gradlew.bat :app:assembleRelease '-PbackendHost=127.0.0.1' --no-configuration-cache
 ```
 
 La variante release requiere primero configurar la firma como se explica más abajo. No se debe usar `localhost` del teléfono como si fuera el PC sin un túnel ADB.
@@ -176,7 +176,7 @@ La llave y sus credenciales se conservan en `.private/` con acceso restringido y
 9. Probar una alerta sin conexión y su sincronización al recuperarla.
 10. Mostrar pruebas, cobertura y verificación de firma; cerrar sesión.
 
-Registrar la ejecución en el teléfono real: la comprobación en emulador no certifica ese dispositivo. La guía Word de estudio, los diagramas y la evidencia se enlazan desde `docs/`.
+Registrar la ejecución en el teléfono real: la comprobación en emulador no certifica ese dispositivo. Consultar el [registro de verificación de la entrega](docs/EVIDENCIA_ENTREGA.md).
 
 ## Ramas
 
