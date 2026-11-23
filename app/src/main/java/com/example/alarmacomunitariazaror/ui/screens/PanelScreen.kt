@@ -111,11 +111,24 @@ fun PanelScreen(
         }
 
         AnimatedVisibility(visible = panel.mensajeError != null) {
-            Text(
-                text = panel.mensajeError.orEmpty(),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Error,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = panel.mensajeError.orEmpty(),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
 
         // --- Formulario de la alerta (con validación por campo) ---
@@ -159,7 +172,7 @@ fun PanelScreen(
 
         Spacer(Modifier.height(8.dp))
 
-        // --- BOTÓN DE PÁNICO ---
+        // --- BOTÓN DE PÁNICO CON ESTADO DE CARGA Y PULSO ---
         Button(
             // Si la alarma suena, el botón la detiene; si no, intenta activarla
             onClick = if (panel.alarmaActiva) onDesactivar else onActivar,
@@ -169,16 +182,32 @@ fun PanelScreen(
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.size(200.dp).scale(escala)   // scale aplica el pulso
         ) {
-            Text(
-                text = when {
-                    panel.guardando -> "GUARDANDO…"
-                    panel.alarmaActiva -> "DETENER\nALARMA"
-                    else -> "ACTIVAR\nALARMA"
-                },
-                textAlign = TextAlign.Center,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            if (panel.guardando) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(36.dp),
+                        strokeWidth = 3.dp,
+                        color = Color.White
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "GUARDANDO…",
+                        textAlign = TextAlign.Center,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Text(
+                    text = if (panel.alarmaActiva) "DETENER\nALARMA" else "ACTIVAR\nALARMA",
+                    textAlign = TextAlign.Center,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
         Text(
             text = if (panel.alarmaActiva) "La alarma está sonando…" else "Completa los datos y pulsa el botón",

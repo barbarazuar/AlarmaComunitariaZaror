@@ -100,6 +100,7 @@ fun AppNavigation() {
                         mensaje = remoto.mensaje,
                         onRefrescar = alarmaViewModel::refrescarAlertas,
                         onAtender = alarmaViewModel::marcarAtendida,
+                        onEditar = alarmaViewModel::editarDescripcion,
                         onEliminar = alarmaViewModel::eliminarAlerta
                     )
                 }
