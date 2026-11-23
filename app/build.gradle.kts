@@ -69,4 +69,14 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     // Mostrar fotos en pantalla
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Retrofit: cliente HTTP para los microservicios y la API externa
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Pruebas de repositorios: respuestas remotas simuladas y corrutinas
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }
