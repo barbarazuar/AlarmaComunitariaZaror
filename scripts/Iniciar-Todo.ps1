@@ -64,12 +64,15 @@ function Iniciar-Servicio($modulo, $puerto) {
 Iniciar-Servicio 'ms-usuarios' 8081
 Iniciar-Servicio 'ms-alertas' 8082
 
+# La primera vez Gradle descarga dependencias y compila los dos servicios a la vez, y puede
+# tardar varios minutos; por eso se espera hasta 10 minutos antes de rendirse.
 function Esperar-Servicio($url, $nombre) {
-    for ($i = 0; $i -lt 90; $i++) {
+    Write-Output "Esperando a $nombre (la primera vez puede tardar varios minutos)..."
+    for ($i = 0; $i -lt 150; $i++) {
         try { [void](Invoke-RestMethod -Uri $url -TimeoutSec 2); Write-Output "$nombre listo: $url"; return }
         catch { Start-Sleep -Seconds 2 }
     }
-    throw "$nombre no respondio en 3 minutos. Revisa su ventana."
+    throw "$nombre no respondio en 10 minutos. Revisa su ventana."
 }
 Esperar-Servicio 'http://localhost:8081/api/usuarios' 'ms-usuarios'
 Esperar-Servicio 'http://localhost:8082/api/alertas' 'ms-alertas'
