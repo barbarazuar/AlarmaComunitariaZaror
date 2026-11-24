@@ -114,7 +114,8 @@ $ErrorActionPreference = 'Continue'
 $adb = Join-Path $AndroidSdk 'platform-tools\adb.exe'
 if ($Instalar) {
     if (-not (Test-Path $adb)) { throw "No se encontro adb en $adb." }
-    $dispositivos = & $adb devices | Select-String -Pattern "`tdevice$"
+    & $adb start-server 2>$null | Out-Null
+    $dispositivos = & $adb devices 2>$null | Select-String -Pattern "`tdevice$"
     if (-not $dispositivos) { Write-Warning 'No hay un telefono o emulador conectado; la APK no se instalo.' }
     else {
         & $adb install -r $destino
