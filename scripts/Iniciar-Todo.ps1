@@ -109,6 +109,8 @@ $hash = (Get-FileHash -LiteralPath $destino -Algorithm SHA256).Hash.ToLowerInvar
 "$hash  AlarmaComunitariaZaror-celular.apk  (host $BackendHost)" | Set-Content -Encoding ascii (Join-Path $salida 'SHA256SUMS.txt')
 
 # --- Instalacion opcional por USB ---
+# adb escribe avisos en stderr (por ejemplo al iniciar su servicio); no deben detener el script
+$ErrorActionPreference = 'Continue'
 $adb = Join-Path $AndroidSdk 'platform-tools\adb.exe'
 if ($Instalar) {
     if (-not (Test-Path $adb)) { throw "No se encontro adb en $adb." }
