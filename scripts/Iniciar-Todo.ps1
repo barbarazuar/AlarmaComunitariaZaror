@@ -64,12 +64,15 @@ function Iniciar-Servicio($modulo, $puerto) {
 Iniciar-Servicio 'ms-usuarios' 8081
 Iniciar-Servicio 'ms-alertas' 8082
 
+# La primera vez Gradle descarga dependencias y compila los dos servicios a la vez, y puede
+# tardar varios minutos; por eso se espera hasta 10 minutos antes de rendirse.
 function Esperar-Servicio($url, $nombre) {
-    for ($i = 0; $i -lt 90; $i++) {
+    Write-Output "Esperando a $nombre (la primera vez puede tardar varios minutos)..."
+    for ($i = 0; $i -lt 150; $i++) {
         try { [void](Invoke-RestMethod -Uri $url -TimeoutSec 2); Write-Output "$nombre listo: $url"; return }
         catch { Start-Sleep -Seconds 2 }
     }
-    throw "$nombre no respondio en 3 minutos. Revisa su ventana."
+    throw "$nombre no respondio en 10 minutos. Revisa su ventana."
 }
 Esperar-Servicio 'http://localhost:8081/api/usuarios' 'ms-usuarios'
 Esperar-Servicio 'http://localhost:8082/api/alertas' 'ms-alertas'
@@ -106,10 +109,13 @@ $hash = (Get-FileHash -LiteralPath $destino -Algorithm SHA256).Hash.ToLowerInvar
 "$hash  AlarmaComunitariaZaror-celular.apk  (host $BackendHost)" | Set-Content -Encoding ascii (Join-Path $salida 'SHA256SUMS.txt')
 
 # --- Instalacion opcional por USB ---
+# adb escribe avisos en stderr (por ejemplo al iniciar su servicio); no deben detener el script
+$ErrorActionPreference = 'Continue'
 $adb = Join-Path $AndroidSdk 'platform-tools\adb.exe'
 if ($Instalar) {
     if (-not (Test-Path $adb)) { throw "No se encontro adb en $adb." }
-    $dispositivos = & $adb devices | Select-String -Pattern "`tdevice$"
+    & $adb start-server 2>$null | Out-Null
+    $dispositivos = & $adb devices 2>$null | Select-String -Pattern "`tdevice$"
     if (-not $dispositivos) { Write-Warning 'No hay un telefono o emulador conectado; la APK no se instalo.' }
     else {
         & $adb install -r $destino
