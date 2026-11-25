@@ -258,10 +258,11 @@ Tablero con las listas **Por hacer**, **En curso** y **Finalizado**. Tarjetas po
 | 3 | Configurar Retrofit, conectar repositorio con microservicios, errores y datos locales, API externa, pruebas del repositorio |
 | 4 | Medición de cobertura, pruebas de ViewModel y repositorio, versión release, README, firma y entrega |
 
-Enlace del tablero: **pendiente de conectar la cuenta y crear el tablero real**.
-Las listas y tarjetas anteriores son el plan de cierre; no acreditan un tablero
-creado ni una planificación histórica en Trello. La URL y las capturas reales se
-agregarán cuando exista acceso. No se utilizan capturas simuladas.
+Enlace del tablero: https://trello.com/b/amQh4xii
+
+Las listas y tarjetas anteriores son el plan de cierre de la entrega. Las capturas
+reales del tablero y de la consola de pruebas se guardan en `docs/capturas/`; no se
+utilizan capturas simuladas.
 
 El [control de cierre de entrega](docs/CIERRE_ENTREGA.md) distingue las tareas
 completadas de las que requieren al equipo, el teléfono o el docente.

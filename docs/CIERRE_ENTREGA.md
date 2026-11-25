@@ -8,7 +8,7 @@ casos nuevos de Kotest/MockK. El commit exacto de cada APK se conserva en
 
 | Tarea | Estado comprobado | Qué falta |
 |---|---|---|
-| Trello | Listas y tareas por persona definidas en README | Conectar la cuenta, crear el tablero real, obtener URL y capturas |
+| Trello | Tablero creado: https://trello.com/b/amQh4xii | Guardar las capturas del tablero en `docs/capturas/` y mantener las tarjetas al día |
 | APK desde main | Pruebas, cobertura, lint y compilación release de la base integrada correctos | Conservar la salida completa de Preparar-Entrega.ps1 y verificar la APK distribuida |
 | IP de la defensa | La validación local usa 192.168.1.9 | Se usará otro PC; obtener su IPv4 y recompilar antes de la defensa |
 | Teléfono físico | No había un dispositivo físico conectado por ADB | Instalar, ejecutar el recorrido y registrar modelo, Android y evidencia |
