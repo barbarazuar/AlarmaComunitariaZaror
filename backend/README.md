@@ -1,6 +1,6 @@
 # Backend: microservicios Spring Boot
 
-Dos microservicios independientes. Cada uno tiene su propio puerto y su propia base de datos H2 guardada en archivo, en la carpeta `backend/data/`, que se crea sola al arrancar.
+Dos microservicios independientes. Cada uno tiene su propio puerto y su propia base de datos H2 guardada en archivo, en la carpeta `backend/data/`. La carpeta viene en el repo (vacía, con un `.gitkeep`) y los archivos de la base se crean solos al arrancar.
 
 | Microservicio | Puerto | Base URL | Responsabilidad |
 |---|---|---|---|
@@ -32,6 +32,12 @@ $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 Cuando en la consola aparece `Started ...Application`, el microservicio ya está corriendo.
 La primera vez, `ms-alertas` carga 2 alertas ficticias para que la app no parta vacía.
 
+También se pueden levantar los dos juntos en una sola terminal:
+
+```powershell
+.\gradlew.bat :ms-usuarios:bootRun :ms-alertas:bootRun --parallel
+```
+
 ## Ver la base de datos
 
 Consola H2 en el navegador:
@@ -39,7 +45,7 @@ Consola H2 en el navegador:
 - Usuarios: http://localhost:8081/h2-console, con JDBC URL `jdbc:h2:file:../data/usuarios-db;AUTO_SERVER=TRUE`
 - Alertas: http://localhost:8082/h2-console, con JDBC URL `jdbc:h2:file:../data/alertas-db;AUTO_SERVER=TRUE`
 
-Usuario `sa`, sin contraseña. Para partir de cero hay que detener los microservicios y borrar `backend/data/`.
+Usuario `sa`, sin contraseña. Para partir de cero hay que detener los microservicios y borrar los archivos `*.db` de `backend/data/`, dejando el `.gitkeep`.
 
 ## Estructura de paquetes (igual en los dos)
 
