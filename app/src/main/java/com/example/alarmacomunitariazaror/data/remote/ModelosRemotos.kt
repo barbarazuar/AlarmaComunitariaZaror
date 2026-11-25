@@ -22,7 +22,8 @@ data class AlertaRemota(
     val fechaHora: Long,
     val tipoEmergencia: String,
     val descripcion: String? = null,
-    val estado: String = "ACTIVA"      // "ACTIVA" o "ATENDIDA"
+    val estado: String = "ACTIVA",     // "ACTIVA" o "ATENDIDA"
+    val tieneFoto: Boolean = false     // true si el servidor guarda la foto de esta alerta
 )
 
 data class EstadoRequestRemoto(val estado: String)

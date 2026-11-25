@@ -1,6 +1,6 @@
 # Backend: microservicios Spring Boot
 
-Dos microservicios independientes. Cada uno tiene su propio puerto y su propia base de datos H2 guardada en archivo, en la carpeta `backend/data/`, que se crea sola al arrancar.
+Dos microservicios independientes. Cada uno tiene su propio puerto y su propia base de datos H2 guardada en archivo, en la carpeta `backend/data/`. La carpeta viene en el repo (vacía, con un `.gitkeep`) y los archivos de la base se crean solos al arrancar.
 
 | Microservicio | Puerto | Base URL | Responsabilidad |
 |---|---|---|---|
@@ -32,6 +32,12 @@ $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 Cuando en la consola aparece `Started ...Application`, el microservicio ya está corriendo.
 La primera vez, `ms-alertas` carga 2 alertas ficticias para que la app no parta vacía.
 
+También se pueden levantar los dos juntos en una sola terminal:
+
+```powershell
+.\gradlew.bat :ms-usuarios:bootRun :ms-alertas:bootRun --parallel
+```
+
 ## Ver la base de datos
 
 Consola H2 en el navegador:
@@ -39,7 +45,7 @@ Consola H2 en el navegador:
 - Usuarios: http://localhost:8081/h2-console, con JDBC URL `jdbc:h2:file:../data/usuarios-db;AUTO_SERVER=TRUE`
 - Alertas: http://localhost:8082/h2-console, con JDBC URL `jdbc:h2:file:../data/alertas-db;AUTO_SERVER=TRUE`
 
-Usuario `sa`, sin contraseña. Para partir de cero hay que detener los microservicios y borrar `backend/data/`.
+Usuario `sa`, sin contraseña. Para partir de cero hay que detener los microservicios y borrar los archivos `*.db` de `backend/data/`, dejando el `.gitkeep`.
 
 ## Estructura de paquetes (igual en los dos)
 
@@ -91,7 +97,9 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 | POST | `/api/alertas` | `AlertaRequest` | 201 / 400 |
 | PUT | `/api/alertas/{id}` | `AlertaRequest` | 200 / 400 / 404 |
 | PATCH | `/api/alertas/{id}/estado` | `{ "estado": "ATENDIDA" }` | 200 / 400 / 404 |
-| DELETE | `/api/alertas/{id}` | | 204 / 404 |
+| DELETE | `/api/alertas/{id}` | | 204 / 404 (borra también la foto) |
+| PUT | `/api/alertas/{id}/foto` | bytes de la imagen, `Content-Type: image/jpeg` o `image/png` | 204 / 400 si está vacía, pesa más de 2 MB o no es imagen / 404 |
+| GET | `/api/alertas/{id}/foto` | | 200 con la imagen / 404 si la alerta no tiene foto |
 
 ```json
 // POST /api/alertas  (fechaHora y usuarioId son opcionales)
@@ -108,7 +116,8 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 {
   "id": 3, "vecinoNombre": "Ana Demo", "usuarioId": 1,
   "ubicacion": "Lat -33.495, Lon -70.715", "fechaHora": 1795445770083,
-  "tipoEmergencia": "Incendio", "descripcion": "Humo en el pasaje", "estado": "ACTIVA"
+  "tipoEmergencia": "Incendio", "descripcion": "Humo en el pasaje", "estado": "ACTIVA",
+  "tieneFoto": false
 }
 ```
 
@@ -130,7 +139,7 @@ La clave se guarda con **BCrypt**, nunca en texto plano. El correo se guarda en 
 .\gradlew.bat test
 ```
 
-30 pruebas entre ambos microservicios. Ver [pruebas y cobertura](../docs/PRUEBAS.md) para los resultados y el alcance medido. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
+40 pruebas entre ambos microservicios. Ver [pruebas y cobertura](../docs/PRUEBAS.md) para los resultados y el alcance medido. El reporte HTML queda en `ms-*/build/reports/tests/test/index.html`.
 
 | Clase | Tipo | Qué se mockea |
 |---|---|---|

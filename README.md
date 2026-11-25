@@ -25,6 +25,27 @@ La alarma sonora y las notificaciones son locales. No incluye push a otros telé
 
 Los aportes de cada integrante se ven en el historial de commits de GitHub y en las tareas de Trello (ver más abajo). Cada integrante defiende el proyecto de forma individual.
 
+## Clonar y ejecutar en cualquier PC
+
+El repositorio no contiene llaves ni contraseñas. Para ejecutarlo en otro computador solo se necesita el JDK y el SDK de Android (ver requisitos). Los microservicios no dependen de Android ni de ninguna llave.
+
+```powershell
+git clone https://github.com/barbarazuar/AlarmaComunitariaZaror.git
+cd AlarmaComunitariaZarorackend
+.\gradlew.bat :ms-usuarios:bootRun     # terminal 1, puerto 8081
+.\gradlew.bat :ms-alertas:bootRun      # terminal 2, puerto 8082
+```
+
+Para hacerlo todo en un paso, el script `scripts/Iniciar-Todo.ps1` detecta la IP del computador, levanta los dos microservicios, espera a que respondan y compila la APK apuntando a esa IP. Con `-Instalar` la instala en un teléfono conectado por USB y con `-Firewall` (PowerShell como administrador) abre los puertos 8081 y 8082. Al terminar de levantar los servicios abre Edge con sus endpoints (se desactiva con `-SinNavegador`):
+
+```powershell
+.\scripts\Iniciar-Todo.ps1 -Instalar
+```
+
+El teléfono debe estar en la misma red WiFi que el computador. La APK queda en `dist/entrega/`.
+
+Para la aplicación, abrir la carpeta raíz en Android Studio (genera `local.properties` con el SDK) y ejecutar `app`, o compilar con `.\gradlew.bat :app:assembleDebug`. Los pasos completos están en las secciones siguientes.
+
 ## Requisitos
 
 - Android Studio y un **JDK completo 21**, incluido el ejecutable `jlink`.
@@ -135,11 +156,11 @@ Pantallas Compose -> ViewModel -> RepositorioAlarma
 
 - El historial siempre se lee de Room. Crear una alerta primero guarda localmente y luego intenta POST al servidor.
 - Sin respuesta correcta del POST, queda pendiente con `remoteId = null`; se reintenta al abrir o refrescar el historial.
-- Después de enviar pendientes se descarga la lista remota y se conserva la foto local de registros existentes.
+- Después de enviar pendientes se descarga la lista remota y se conserva la foto local de registros existentes. Si el servidor tiene la foto de una alerta que el teléfono no tiene, la descarga.
 - Cambiar estado, editar o eliminar registros ya enviados requiere respuesta remota correcta. DELETE 404 permite limpiar una copia que el servidor ya no tiene.
 - Registro y login usan ms-usuarios. Ante falta de conexión se usa el respaldo local; un error HTTP de credenciales no se convierte en login offline.
 - Una cuenta creada offline no se registra automáticamente después en el servidor.
-- Las fotos solo existen en el teléfono; no se suben al backend.
+- La foto de una alerta se guarda en el teléfono y, cuando la alerta ya está en el servidor, se sube con `PUT /api/alertas/{id}/foto` (JPEG reducido a 1280 px). Si la subida falla, se reintenta al refrescar el historial. Otro teléfono la descarga con `GET /api/alertas/{id}/foto`. El servidor guarda la imagen en su base H2 (máximo 2 MB) y la elimina junto con la alerta.
 - No hay JWT, autorización por propietario, idempotencia ni sincronización periódica con WorkManager. La lista remota actual es compartida.
 - HTTP sin cifrar está permitido para los servicios de desarrollo. El backend de demostración usa H2 sin contraseña y consola habilitada. No es una configuración para publicar en internet.
 
@@ -148,7 +169,7 @@ Pantallas Compose -> ViewModel -> RepositorioAlarma
 | Servicio | Operaciones |
 |---|---|
 | Usuarios | POST `/api/usuarios/registro`, POST `/api/usuarios/login`, GET lista e individual, PUT y DELETE por id |
-| Alertas | GET lista e individual, POST, PUT y DELETE por id, PATCH `/api/alertas/{id}/estado` |
+| Alertas | GET lista e individual, POST, PUT y DELETE por id, PATCH `/api/alertas/{id}/estado`, PUT y GET `/api/alertas/{id}/foto` |
 | Externo | GET `https://api.open-meteo.com/v1/forecast` con latitude, longitude y current |
 
 El contrato completo y códigos de respuesta están en [backend/README.md](backend/README.md).
@@ -165,8 +186,8 @@ El contrato completo y códigos de respuesta están en [backend/README.md](backe
 
 | Módulo | Pruebas correctas | Cobertura de líneas de lógica |
 |---|---:|---:|
-| Android | 94 | 99,76 % |
-| ms-alertas | 17 | 94,74 % |
+| Android | 100 | 99,54 % |
+| ms-alertas | 27 | 96,15 % |
 | ms-usuarios | 13 | 100 % |
 
 Los tres módulos superan el umbral del 80 %. El alcance, las exclusiones y las rutas de reportes están en [docs/PRUEBAS.md](docs/PRUEBAS.md). Los porcentajes no incluyen toda la UI ni reemplazan la prueba en un dispositivo.
@@ -199,7 +220,7 @@ Generar una llave nueva solo si el proyecto no tiene una llave de entrega existe
 .\scripts\Preparar-Entrega.ps1 -BackendHost 10.0.2.2
 ```
 
-La llave y sus credenciales se conservan en `.private/` con acceso restringido y quedan excluidas de Git. También se admiten variables de entorno `ZAROR_STORE_FILE`, `ZAROR_STORE_PASSWORD`, `ZAROR_KEY_ALIAS` y `ZAROR_KEY_PASSWORD`. La compilación release falla si falta la configuración.
+La llave y sus credenciales se conservan en `.private/` con acceso restringido y quedan excluidas de Git. También se admiten variables de entorno `ZAROR_STORE_FILE`, `ZAROR_STORE_PASSWORD`, `ZAROR_KEY_ALIAS` y `ZAROR_KEY_PASSWORD`. Sin llave configurada, la compilación release no falla: se firma con la llave de depuración de Android y muestra un aviso, de modo que cualquiera pueda generar una APK instalable. Esa APK sirve para pruebas; la entrega oficial se genera con la llave privada. La tarea `validarFirmaRelease` exige la llave de forma explícita.
 
 `Preparar-Entrega.ps1` ejecuta pruebas y cobertura, lint, build release, verificación con apksigner y exporta a `dist/entrega/` la APK, huella SHA-256 y reportes. Release desactiva el registro HTTP de OkHttp. Leer [firma y entrega segura](docs/FIRMA_Y_ENTREGA.md) antes de entregar la llave al docente.
 
@@ -237,7 +258,13 @@ Tablero con las listas **Por hacer**, **En curso** y **Finalizado**. Tarjetas po
 | 3 | Configurar Retrofit, conectar repositorio con microservicios, errores y datos locales, API externa, pruebas del repositorio |
 | 4 | Medición de cobertura, pruebas de ViewModel y repositorio, versión release, README, firma y entrega |
 
-Enlace del tablero: _pegar aquí la URL del tablero de Trello_. Las capturas del tablero y de las pruebas están en `docs/capturas/`.
+Enlace del tablero: **pendiente de conectar la cuenta y crear el tablero real**.
+Las listas y tarjetas anteriores son el plan de cierre; no acreditan un tablero
+creado ni una planificación histórica en Trello. La URL y las capturas reales se
+agregarán cuando exista acceso. No se utilizan capturas simuladas.
+
+El [control de cierre de entrega](docs/CIERRE_ENTREGA.md) distingue las tareas
+completadas de las que requieren al equipo, el teléfono o el docente.
 
 ## Ramas
 
